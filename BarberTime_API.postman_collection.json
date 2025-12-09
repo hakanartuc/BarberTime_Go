@@ -1,0 +1,1310 @@
+{
+	"info": {
+		"_postman_id": "barbertime-api-collection",
+		"name": "BarberTime API",
+		"description": "Kuaför Saati Backend API - Tüm endpoint'ler",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Get Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.authData && jsonData.authData.accessToken) {",
+									"        pm.environment.set(\"accessToken\", jsonData.authData.accessToken);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"phoneNumber\": \"+905551234567\",\n    \"deviceId\": \"device-12345\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/token",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "token"]
+						},
+						"description": "Telefon numarası ve device ID ile token alır"
+					}
+				}
+			]
+		},
+		{
+			"name": "User",
+			"item": [
+				{
+					"name": "Get Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/user/profile",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "user", "profile"]
+						}
+					}
+				},
+				{
+					"name": "Update Profile",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Ahmet Yılmaz\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/user/profile",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "user", "profile"]
+						}
+					}
+				},
+				{
+					"name": "Update Avatar",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "avatar",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/user/avatar",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "user", "avatar"]
+						}
+					}
+				},
+				{
+					"name": "Delete Avatar",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/user/avatar",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "user", "avatar"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Appointments",
+			"item": [
+				{
+					"name": "Get Past Appointments",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/appointments/past?page=1&limit=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "appointments", "past"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Upcoming Appointments",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/appointments/upcoming?page=1&limit=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "appointments", "upcoming"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Appointment",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/appointments/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "appointments", "1"]
+						}
+					}
+				},
+				{
+					"name": "Create Appointment",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"barberId\": 1,\n    \"serviceIds\": [1, 2],\n    \"date\": \"2025-12-15\",\n    \"time\": \"14:00\",\n    \"notes\": \"Kısa saç kesimi\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/appointments",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "appointments"]
+						}
+					}
+				},
+				{
+					"name": "Cancel Appointment",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/appointments/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "appointments", "1"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Barbers",
+			"item": [
+				{
+					"name": "Get Nearby Barbers",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/barbers/nearby?latitude=41.0082&longitude=28.9784&page=1&limit=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "barbers", "nearby"],
+							"query": [
+								{
+									"key": "latitude",
+									"value": "41.0082"
+								},
+								{
+									"key": "longitude",
+									"value": "28.9784"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Barber",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/barbers/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "barbers", "1"]
+						}
+					}
+				},
+				{
+					"name": "Get Barber Availability",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/barbers/1/availability?startDate=2025-12-10&endDate=2025-12-17",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "barbers", "1", "availability"],
+							"query": [
+								{
+									"key": "startDate",
+									"value": "2025-12-10"
+								},
+								{
+									"key": "endDate",
+									"value": "2025-12-17"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Shops",
+			"item": [
+				{
+					"name": "Get Nearby Shops",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/shops/nearby?latitude=41.0082&longitude=28.9784&page=1&limit=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "shops", "nearby"],
+							"query": [
+								{
+									"key": "latitude",
+									"value": "41.0082"
+								},
+								{
+									"key": "longitude",
+									"value": "28.9784"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Shop",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/shops/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "shops", "1"]
+						}
+					}
+				},
+				{
+					"name": "Get Shop Barbers",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/shops/1/barbers",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "shops", "1", "barbers"]
+						}
+					}
+				},
+				{
+					"name": "Get Shop Reviews",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/shops/1/reviews?page=1&limit=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "shops", "1", "reviews"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Favorites",
+			"item": [
+				{
+					"name": "Get All Favorites",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/favorites?type=shop",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "favorites"],
+							"query": [
+								{
+									"key": "type",
+									"value": "shop",
+									"description": "shop veya barber"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Get Favorite Shops",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/favorites/shops",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "favorites", "shops"]
+						}
+					}
+				},
+				{
+					"name": "Get Favorite Barbers",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/favorites/barbers",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "favorites", "barbers"]
+						}
+					}
+				},
+				{
+					"name": "Add Favorite Shop",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/favorites/shops/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "favorites", "shops", "1"]
+						}
+					}
+				},
+				{
+					"name": "Remove Favorite Shop",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/favorites/shops/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "favorites", "shops", "1"]
+						}
+					}
+				},
+				{
+					"name": "Add Favorite Barber",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/favorites/barbers/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "favorites", "barbers", "1"]
+						}
+					}
+				},
+				{
+					"name": "Remove Favorite Barber",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/favorites/barbers/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "favorites", "barbers", "1"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Reviews",
+			"item": [
+				{
+					"name": "Get Reviews",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/reviews?type=shop&targetId=1&page=1&limit=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "reviews"],
+							"query": [
+								{
+									"key": "type",
+									"value": "shop",
+									"description": "shop veya barber"
+								},
+								{
+									"key": "targetId",
+									"value": "1"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						}
+					}
+				},
+				{
+					"name": "Create Review",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"type\": \"shop\",\n    \"targetId\": 1,\n    \"rating\": 5,\n    \"comment\": \"Harika bir salon, çok memnun kaldım!\",\n    \"appointmentId\": 1\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/reviews",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "reviews"]
+						}
+					}
+				},
+				{
+					"name": "Delete Review",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/reviews/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "reviews", "1"]
+						}
+					}
+				}
+			]
+		},
+		{
+			"name": "Services",
+			"item": [
+				{
+					"name": "Get All Services",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/services",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "services"]
+						},
+						"description": "Tüm servisleri listeler (sadece name bilgisi - admin tarafından yönetilir)"
+					}
+				},
+				{
+					"name": "Get Shop Services",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/service/shop/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "service", "shop", "1"]
+						},
+						"description": "Shop'un servislerini getirir (ShopService listesi - duration, price, description bilgileri ile)"
+					}
+				}
+			]
+		},
+		{
+			"name": "Barber Profile",
+			"item": [
+				{
+					"name": "Register as Barber",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Mehmet Berber\",\n    \"bio\": \"10 yıllık deneyimli berber\",\n    \"experience\": 10\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/barber/register",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "barber", "register"]
+						},
+						"description": "User'ı barber olarak kaydeder"
+					}
+				},
+				{
+					"name": "Get Barber Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/barber/profile",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "barber", "profile"]
+						},
+						"description": "Barber'ın kendi profilini getirir"
+					}
+				},
+				{
+					"name": "Update Barber Profile",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Mehmet Berber Güncellendi\",\n    \"bio\": \"15 yıllık deneyimli berber\",\n    \"experience\": 15\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/barber/profile",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "barber", "profile"]
+						},
+						"description": "Barber'ın kendi profilini günceller"
+					}
+				}
+			]
+		},
+		{
+			"name": "Shop Profile",
+			"item": [
+				{
+					"name": "Create Shop",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Modern Kuaför Salonu\",\n    \"description\": \"Modern ve şık bir kuaför salonu\",\n    \"phoneNumber\": \"+905551234567\",\n    \"email\": \"info@modernkuaför.com\",\n    \"website\": \"https://modernkuaför.com\",\n    \"latitude\": 41.0082,\n    \"longitude\": 28.9784,\n    \"workingHours\": \"{\\\"monday\\\": {\\\"open\\\": \\\"09:00\\\", \\\"close\\\": \\\"18:00\\\"}, \\\"tuesday\\\": {\\\"open\\\": \\\"09:00\\\", \\\"close\\\": \\\"18:00\\\"}}\",\n    \"closedDays\": \"[\\\"sunday\\\"]\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/shop",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "shop"]
+						},
+						"description": "Yeni shop oluşturur. User'ın barber olması gerekir. Oluşturan otomatik owner olur (barber_shops tablosunda isOwner: true)"
+					}
+				},
+				{
+					"name": "Get Shop Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/shop/profile/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "shop", "profile", "1"]
+						},
+						"description": "Shop profilini getirir"
+					}
+				},
+				{
+					"name": "Update Shop Profile",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Modern Kuaför Salonu Güncellendi\",\n    \"description\": \"Yeni açıklama\",\n    \"phoneNumber\": \"+905559876543\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/shop/profile/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "shop", "profile", "1"]
+						},
+						"description": "Shop profilini günceller (sadece owner)"
+					}
+				},
+				{
+					"name": "Get Shop Owners",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/shop/1/owners",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "shop", "1", "owners"]
+						},
+						"description": "Shop owner'larını listeler"
+					}
+				},
+				{
+					"name": "Add Shop Owner",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"ownerUserId\": 2\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/shop/1/owners",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "shop", "1", "owners"]
+						},
+						"description": "Shop'a yeni owner ekler (sadece mevcut owner). Owner olacak user'ın barber olması gerekir. barber_shops tablosunda isOwner: true yapılır"
+					}
+				},
+				{
+					"name": "Remove Shop Owner",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/shop/1/owners/2",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "shop", "1", "owners", "2"]
+						},
+						"description": "Shop owner'ını çıkarır (sadece mevcut owner). barber_shops tablosunda isOwner: false yapılır"
+					}
+				},
+				{
+					"name": "Create Shop Service",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"serviceId\": 1,\n    \"duration\": 30,\n    \"price\": 150.00,\n    \"description\": \"Kısa saç kesimi\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/shop/1/services",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "shop", "1", "services"]
+						},
+						"description": "Shop'a yeni servis ekler (sadece owner). shop_services tablosuna kayıt oluşturur"
+					}
+				},
+				{
+					"name": "Update Shop Service",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"duration\": 45,\n    \"price\": 200.00,\n    \"description\": \"Uzun saç kesimi\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/shop/1/services/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "shop", "1", "services", "1"]
+						},
+						"description": "Shop servisini günceller (sadece owner). shop_services tablosunda duration, price, description güncellenir"
+					}
+				},
+				{
+					"name": "Delete Shop Service",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/shop/1/services/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "shop", "1", "services", "1"]
+						},
+						"description": "Shop servisini siler (sadece owner)"
+					}
+				}
+			]
+		},
+		{
+			"name": "Barber Shop Requests",
+			"item": [
+				{
+					"name": "Create Barber Shop Request",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"shopId\": 1,\n    \"message\": \"Bu shop'a katılmak istiyorum\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/shops/1/barber-requests",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "shops", "1", "barber-requests"]
+						},
+						"description": "Barber shop'a başvuru yapar"
+					}
+				},
+				{
+					"name": "Get Barber Requests by Shop",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/shops/1/barber-requests",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "shops", "1", "barber-requests"]
+						},
+						"description": "Shop owner'ları için bekleyen başvuruları listeler"
+					}
+				},
+				{
+					"name": "Get My Barber Requests",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/barber/requests",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "barber", "requests"]
+						},
+						"description": "Barber'ın kendi başvurularını listeler"
+					}
+				},
+				{
+					"name": "Approve Barber Shop Request",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/shops/1/barber-requests/1/approve",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "shops", "1", "barber-requests", "1", "approve"]
+						},
+						"description": "Shop owner başvuruyu onaylar"
+					}
+				},
+				{
+					"name": "Reject Barber Shop Request",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"reason\": \"Uygun değil\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/shops/1/barber-requests/1/reject",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "shops", "1", "barber-requests", "1", "reject"]
+						},
+						"description": "Shop owner başvuruyu reddeder"
+					}
+				}
+			]
+		},
+		{
+			"name": "Search",
+			"item": [
+				{
+					"name": "Search",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/search?q=berber&type=all&latitude=41.0082&longitude=28.9784&service=Saç Kesimi&km=10&page=1&limit=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "search"],
+							"query": [
+								{
+									"key": "q",
+									"value": "berber",
+									"description": "Arama metni"
+								},
+								{
+									"key": "type",
+									"value": "all",
+									"description": "barber, shop veya all"
+								},
+								{
+									"key": "latitude",
+									"value": "41.0082",
+									"description": "Enlem (opsiyonel)"
+								},
+								{
+									"key": "longitude",
+									"value": "28.9784",
+									"description": "Boylam (opsiyonel)"
+								},
+								{
+									"key": "service",
+									"value": "Saç Kesimi",
+									"description": "Service name ile filtreleme (opsiyonel, fuzzy search - benzer isimler de gelir)"
+								},
+								{
+									"key": "km",
+									"value": "10",
+									"description": "Maksimum mesafe (km cinsinden, opsiyonel, varsayılan: 50km)"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Arama yapar. service parametresi ile belirli bir servise sahip barber/shop'ları filtreleyebilir. km parametresi ile maksimum mesafe belirtebilirsiniz."
+					}
+				}
+			]
+		},
+		{
+			"name": "Admin",
+			"item": [
+				{
+					"name": "Get Pending Shops",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/shops/pending?page=1&limit=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "admin", "shops", "pending"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Bekleyen shop'ları listeler (sadece admin)"
+					}
+				},
+				{
+					"name": "Approve Shop",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/shops/1/approve",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "admin", "shops", "1", "approve"]
+						},
+						"description": "Shop'u onaylar (status: confirmed) - sadece admin"
+					}
+				},
+				{
+					"name": "Reject Shop",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/shops/1/reject",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "admin", "shops", "1", "reject"]
+						},
+						"description": "Shop'u reddeder (status: rejected) - sadece admin"
+					}
+				},
+				{
+					"name": "Create Service",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Saç Kesimi\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/services",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "admin", "services"]
+						},
+						"description": "Yeni servis oluşturur (sadece admin). services tablosuna sadece name ile kayıt ekler"
+					}
+				},
+				{
+					"name": "Update Service",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Saç Kesimi (Güncellendi)\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/services/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "admin", "services", "1"]
+						},
+						"description": "Servis adını günceller (sadece admin)"
+					}
+				},
+				{
+					"name": "Delete Service",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/admin/services/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "admin", "services", "1"]
+						},
+						"description": "Servisi siler (sadece admin)"
+					}
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "accessToken",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
+
