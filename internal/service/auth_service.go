@@ -4,11 +4,13 @@ import (
 	"barbertime_go/internal/models"
 	"barbertime_go/internal/repository"
 	"barbertime_go/internal/utils"
+	"fmt"
 	"time"
 )
 
 type AuthService interface {
 	Login(phoneNumber, deviceID string) (bool, *AuthResponse, error)
+	VerifyPhone(phoneNumber, deviceID, code string) (*AuthResponse, error)
 }
 
 type AuthResponse struct {
@@ -22,12 +24,14 @@ type AuthData struct {
 }
 
 type authService struct {
-	userRepo repository.UserRepository
+	userRepo             repository.UserRepository
+	phoneVerificationSvc PhoneVerificationService
 }
 
-func NewAuthService(userRepo repository.UserRepository) AuthService {
+func NewAuthService(userRepo repository.UserRepository, phoneVerificationSvc PhoneVerificationService) AuthService {
 	return &authService{
-		userRepo: userRepo,
+		userRepo:             userRepo,
+		phoneVerificationSvc: phoneVerificationSvc,
 	}
 }
 
@@ -38,9 +42,10 @@ func (s *authService) Login(phoneNumber, deviceID string) (bool, *AuthResponse, 
 	// Kullanıcı yoksa yeni kullanıcı oluştur
 	if err != nil {
 		user = &models.User{
-			Name:        "",
-			PhoneNumber: phoneNumber,
-			DeviceID:    deviceID,
+			Name:             "",
+			PhoneNumber:      phoneNumber,
+			DeviceID:         deviceID,
+			IsPhoneConfirmed: false,
 		}
 		if err := s.userRepo.Create(user); err != nil {
 			return false, nil, err
@@ -53,23 +58,68 @@ func (s *authService) Login(phoneNumber, deviceID string) (bool, *AuthResponse, 
 		}
 	}
 
-	// JWT token oluştur
+	// Telefon doğrulanmış mı kontrol et
+	if !user.IsPhoneConfirmed {
+		// SMS kodu gönder
+		_, err := s.phoneVerificationSvc.GenerateCode(phoneNumber, deviceID)
+		if err != nil {
+			return false, nil, fmt.Errorf("failed to generate verification code: %w", err)
+		}
+
+		// Token verme, verification gerekiyor
+		return true, &AuthResponse{
+			RequiresVerification: true,
+			AuthData:             nil,
+		}, nil
+	}
+
+	// Telefon doğrulanmışsa token ver
 	token, expiresAt, err := utils.GenerateToken(user.ID, user.PhoneNumber)
 	if err != nil {
 		return false, nil, err
 	}
 
-	// Şimdilik verification gerektirmiyoruz (basit implementasyon)
-	// Gerçek uygulamada SMS/OTP doğrulaması yapılabilir
-	requiresVerification := false
-
 	response := &AuthResponse{
-		RequiresVerification: requiresVerification,
+		RequiresVerification: false,
 		AuthData: &AuthData{
 			AccessToken: token,
 			ExpiresAt:   expiresAt,
 		},
 	}
 
-	return requiresVerification, response, nil
+	return false, response, nil
+}
+
+func (s *authService) VerifyPhone(phoneNumber, deviceID, code string) (*AuthResponse, error) {
+	// Kodu doğrula
+	verified, err := s.phoneVerificationSvc.VerifyCode(phoneNumber, deviceID, code)
+	if err != nil {
+		return nil, err
+	}
+
+	if !verified {
+		return nil, fmt.Errorf("verification failed")
+	}
+
+	// Kullanıcıyı al
+	user, err := s.userRepo.GetByPhoneNumber(phoneNumber)
+	if err != nil {
+		return nil, fmt.Errorf("user not found")
+	}
+
+	// JWT token oluştur
+	token, expiresAt, err := utils.GenerateToken(user.ID, user.PhoneNumber)
+	if err != nil {
+		return nil, err
+	}
+
+	response := &AuthResponse{
+		RequiresVerification: false,
+		AuthData: &AuthData{
+			AccessToken: token,
+			ExpiresAt:   expiresAt,
+		},
+	}
+
+	return response, nil
 }

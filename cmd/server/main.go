@@ -76,13 +76,17 @@ func main() {
 	favoriteRepo := repository.NewFavoriteRepository()
 	barberShopRequestRepo := repository.NewBarberShopRequestRepository()
 	barberShopRepo := repository.NewBarberShopRepository()
+	phoneVerificationCodeRepo := repository.NewPhoneVerificationCodeRepository()
 
 	// Message ve Cache servisleri
 	messageService := service.NewMessageService()
 	cacheService := service.NewCacheService()
 
+	// Phone Verification Service
+	phoneVerificationService := service.NewPhoneVerificationService(phoneVerificationCodeRepo, userRepo)
+
 	// Service'leri oluştur
-	authService := service.NewAuthService(userRepo)
+	authService := service.NewAuthService(userRepo, phoneVerificationService)
 	userService := service.NewUserService(userRepo)
 	barberService := service.NewBarberService(barberRepo, appointmentRepo, cacheService)
 	shopService := service.NewShopService(shopRepo, barberRepo, reviewRepo, cacheService)
@@ -119,6 +123,7 @@ func main() {
 	api := r.Group("/api")
 	{
 		api.POST("/auth/token", authHandler.GetToken)
+		api.POST("/auth/verify-phone", authHandler.VerifyPhone)
 	}
 
 	// Protected routes (Auth gerekir)

@@ -44,7 +44,45 @@
 							"host": ["{{baseUrl}}"],
 							"path": ["api", "auth", "token"]
 						},
-						"description": "Telefon numarası ve device ID ile token alır"
+						"description": "Telefon numarası ve device ID ile token alır. Eğer telefon doğrulanmamışsa requiresVerification: true döner ve SMS kodu gönderilir."
+					}
+				},
+				{
+					"name": "Verify Phone",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.authData && jsonData.authData.accessToken) {",
+									"        pm.environment.set(\"accessToken\", jsonData.authData.accessToken);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"phoneNumber\": \"+905551234567\",\n    \"deviceId\": \"device-12345\",\n    \"code\": \"123456\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/auth/verify-phone",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "auth", "verify-phone"]
+						},
+						"description": "SMS ile gönderilen doğrulama kodunu kontrol eder. Kod doğruysa kullanıcının telefon numarası doğrulanır ve JWT token döner. Kod 10 dakika geçerlidir."
 					}
 				}
 			]

@@ -47,3 +47,24 @@ func (h *AuthHandler) GetToken(c *gin.Context) {
 	utils.SuccessResponse(c, http.StatusOK, response)
 }
 
+type VerifyPhoneRequest struct {
+	PhoneNumber string `json:"phoneNumber" binding:"required"`
+	DeviceID    string `json:"deviceId" binding:"required"`
+	Code        string `json:"code" binding:"required"`
+}
+
+func (h *AuthHandler) VerifyPhone(c *gin.Context) {
+	var req VerifyPhoneRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.BadRequest(c, err.Error())
+		return
+	}
+
+	response, err := h.authService.VerifyPhone(req.PhoneNumber, req.DeviceID, req.Code)
+	if err != nil {
+		utils.BadRequest(c, err.Error())
+		return
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, response)
+}

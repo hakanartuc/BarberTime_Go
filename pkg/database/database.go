@@ -50,6 +50,7 @@ func AutoMigrate() error {
 		&models.Favorite{},
 		&models.BarberShopRequest{},
 		&models.BarberShop{},
+		&models.PhoneVerificationCode{},
 	)
 
 	if err != nil {
