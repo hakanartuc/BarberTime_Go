@@ -96,7 +96,7 @@ func (h *FavoriteHandler) RemoveFavoriteShop(c *gin.Context) {
 		return
 	}
 
-	c.Status(http.StatusNoContent)
+	utils.NoContentResponse(c, "Favorite shop removed successfully")
 }
 
 func (h *FavoriteHandler) AddFavoriteBarber(c *gin.Context) {
@@ -130,6 +130,6 @@ func (h *FavoriteHandler) RemoveFavoriteBarber(c *gin.Context) {
 		return
 	}
 
-	c.Status(http.StatusNoContent)
+	utils.NoContentResponse(c, "Favorite barber removed successfully")
 }
 

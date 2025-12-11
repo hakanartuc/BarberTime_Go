@@ -131,5 +131,5 @@ func (h *AdminHandler) DeleteService(c *gin.Context) {
 		return
 	}
 
-	c.Status(http.StatusNoContent)
+	utils.NoContentResponse(c, "Service deleted successfully")
 }

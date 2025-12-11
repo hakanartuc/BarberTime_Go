@@ -97,5 +97,5 @@ func (h *UserHandler) DeleteAvatar(c *gin.Context) {
 		return
 	}
 
-	c.Status(http.StatusNoContent)
+	utils.NoContentResponse(c, "Avatar deleted successfully")
 }

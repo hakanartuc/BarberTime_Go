@@ -6,17 +6,35 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type ErrorResponse struct {
-	Error   string `json:"error"`
-	Message string `json:"message,omitempty"`
+// StandardResponse tüm endpoint'ler için standart response formatı
+type StandardResponse struct {
+	Success bool        `json:"success"`
+	Data    interface{} `json:"data,omitempty"`
+	Error   string      `json:"error,omitempty"`
+	Message string      `json:"message,omitempty"`
 }
 
+// SuccessResponse başarılı response döndürür
 func SuccessResponse(c *gin.Context, statusCode int, data interface{}) {
-	c.JSON(statusCode, data)
+	c.JSON(statusCode, StandardResponse{
+		Success: true,
+		Data:    data,
+	})
 }
 
+// SuccessResponseWithMessage mesaj ile başarılı response döndürür
+func SuccessResponseWithMessage(c *gin.Context, statusCode int, data interface{}, message string) {
+	c.JSON(statusCode, StandardResponse{
+		Success: true,
+		Data:    data,
+		Message: message,
+	})
+}
+
+// ErrorResponseJSON hata response'u döndürür
 func ErrorResponseJSON(c *gin.Context, statusCode int, message string) {
-	c.JSON(statusCode, ErrorResponse{
+	c.JSON(statusCode, StandardResponse{
+		Success: false,
 		Error:   http.StatusText(statusCode),
 		Message: message,
 	})
@@ -40,4 +58,12 @@ func InternalServerError(c *gin.Context, message string) {
 
 func Forbidden(c *gin.Context, message string) {
 	ErrorResponseJSON(c, http.StatusForbidden, message)
+}
+
+// NoContentResponse başarılı silme işlemleri için standart response döndürür
+func NoContentResponse(c *gin.Context, message string) {
+	if message == "" {
+		message = "Resource deleted successfully"
+	}
+	SuccessResponseWithMessage(c, http.StatusOK, nil, message)
 }

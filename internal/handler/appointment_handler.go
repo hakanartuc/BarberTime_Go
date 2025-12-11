@@ -119,6 +119,6 @@ func (h *AppointmentHandler) DeleteAppointment(c *gin.Context) {
 		return
 	}
 
-	c.Status(http.StatusNoContent)
+	utils.NoContentResponse(c, "Appointment cancelled successfully")
 }
 

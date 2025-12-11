@@ -185,7 +185,7 @@ func (h *ShopProfileHandler) RemoveShopOwner(c *gin.Context) {
 		return
 	}
 
-	c.Status(http.StatusNoContent)
+	utils.NoContentResponse(c, "Shop owner removed successfully")
 }
 
 type CreateShopServiceRequest struct {
@@ -272,5 +272,5 @@ func (h *ShopProfileHandler) DeleteShopService(c *gin.Context) {
 		return
 	}
 
-	c.Status(http.StatusNoContent)
+	utils.NoContentResponse(c, "Shop service deleted successfully")
 }

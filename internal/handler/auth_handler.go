@@ -38,7 +38,7 @@ func (h *AuthHandler) GetToken(c *gin.Context) {
 
 	if requiresVerification {
 		// Verification gerekiyorsa sadece requiresVerification döndür
-		c.JSON(http.StatusOK, gin.H{
+		utils.SuccessResponse(c, http.StatusOK, gin.H{
 			"requiresVerification": true,
 		})
 		return

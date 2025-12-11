@@ -54,6 +54,12 @@ func main() {
 	if err := os.MkdirAll(config.AppConfig.UploadDir+"/avatars", 0755); err != nil {
 		log.Fatal("Failed to create upload directory:", err)
 	}
+	if err := os.MkdirAll(config.AppConfig.UploadDir+"/photos/barbers", 0755); err != nil {
+		log.Fatal("Failed to create photos/barbers directory:", err)
+	}
+	if err := os.MkdirAll(config.AppConfig.UploadDir+"/photos/shops", 0755); err != nil {
+		log.Fatal("Failed to create photos/shops directory:", err)
+	}
 
 	// Router oluştur
 	r := gin.Default()
@@ -77,6 +83,8 @@ func main() {
 	barberShopRequestRepo := repository.NewBarberShopRequestRepository()
 	barberShopRepo := repository.NewBarberShopRepository()
 	phoneVerificationCodeRepo := repository.NewPhoneVerificationCodeRepository()
+	photoRepo := repository.NewPhotoRepository()
+	photoLikeRepo := repository.NewPhotoLikeRepository()
 
 	// Message ve Cache servisleri
 	messageService := service.NewMessageService()
@@ -100,6 +108,8 @@ func main() {
 	shopProfileService := service.NewShopProfileService(shopRepo, userRepo, barberRepo, barberShopRepo, shopServiceRepo, serviceRepo, cacheService, messageService)
 	barberShopRequestService := service.NewBarberShopRequestService(barberShopRequestRepo, barberRepo, shopRepo, barberShopRepo, cacheService, messageService)
 	adminService := service.NewAdminService(shopRepo, serviceRepo, cacheService, messageService)
+	photoService := service.NewPhotoService(photoRepo, barberRepo, shopRepo, barberShopRepo, photoLikeRepo)
+	photoLikeService := service.NewPhotoLikeService(photoLikeRepo, photoRepo)
 
 	// Cache service'i kullanmak için (örnek: barber ve shop servislerine cache eklenebilir)
 	_ = cacheService
@@ -118,6 +128,13 @@ func main() {
 	shopProfileHandler := handler.NewShopProfileHandler(shopProfileService)
 	barberShopRequestHandler := handler.NewBarberShopRequestHandler(barberShopRequestService, barberProfileService)
 	adminHandler := handler.NewAdminHandler(adminService)
+	healthHandler := handler.NewHealthHandler()
+	photoHandler := handler.NewPhotoHandler(photoService)
+	photoLikeHandler := handler.NewPhotoLikeHandler(photoLikeService)
+
+	// Health check endpoint (public, auth gerekmez)
+	r.GET("/health", healthHandler.HealthCheck)
+	r.GET("/api/health", healthHandler.HealthCheck)
 
 	// Public routes (Auth gerekmez)
 	api := r.Group("/api")
@@ -231,6 +248,31 @@ func main() {
 
 		// Search route
 		protected.GET("/search", searchHandler.Search)
+
+		// Photo routes
+		photos := protected.Group("/photos")
+		{
+			// İki parametreli route'lar (type ve id)
+			photos.POST("/:type/:id", photoHandler.UploadPhoto)        // type: barber veya shop
+			photos.GET("/:type/:id", photoHandler.GetPhotos)            // type: barber veya shop
+		}
+
+		// Photo (tekil) routes - çakışmayı önlemek için ayrı path
+		photo := protected.Group("/photo")
+		{
+			photo.GET("/:id", photoHandler.GetPhoto)                   // Tek fotoğraf detayı
+			photo.DELETE("/:id", photoHandler.DeletePhoto)
+		}
+
+		// Photo Like routes
+		photoLikes := protected.Group("/photo")
+		{
+			photoLikes.POST("/:id/like", photoLikeHandler.LikePhoto)
+			photoLikes.DELETE("/:id/like", photoLikeHandler.UnlikePhoto)
+			photoLikes.GET("/:id/likes", photoLikeHandler.GetPhotoLikes)
+			photoLikes.GET("/:id/likes/count", photoLikeHandler.GetPhotoLikeCount)
+			photoLikes.GET("/:id/liked", photoLikeHandler.IsLiked)
+		}
 	}
 
 	// Admin routes (Auth + Admin gerekir)

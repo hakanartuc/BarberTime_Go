@@ -7,6 +7,37 @@
 	},
 	"item": [
 		{
+			"name": "Health",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/health",
+							"host": ["{{baseUrl}}"],
+							"path": ["health"]
+						},
+						"description": "Sistem sağlık kontrolü. PostgreSQL bağlantısını kontrol eder."
+					}
+				},
+				{
+					"name": "Health Check (API)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/health",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "health"]
+						},
+						"description": "Sistem sağlık kontrolü (API endpoint). PostgreSQL bağlantısını kontrol eder."
+					}
+				}
+			]
+		},
+		{
 			"name": "Authentication",
 			"item": [
 				{
@@ -18,8 +49,8 @@
 								"exec": [
 									"if (pm.response.code === 200) {",
 									"    var jsonData = pm.response.json();",
-									"    if (jsonData.authData && jsonData.authData.accessToken) {",
-									"        pm.environment.set(\"accessToken\", jsonData.authData.accessToken);",
+									"    if (jsonData.data.authData && jsonData.data.authData.accessToken) {",
+									"        pm.environment.set(\"accessToken\", jsonData.data.authData.accessToken);",
 									"    }",
 									"}"
 								],
@@ -56,8 +87,8 @@
 								"exec": [
 									"if (pm.response.code === 200) {",
 									"    var jsonData = pm.response.json();",
-									"    if (jsonData.authData && jsonData.authData.accessToken) {",
-									"        pm.environment.set(\"accessToken\", jsonData.authData.accessToken);",
+									"    if (jsonData.data.authData && jsonData.data.authData.accessToken) {",
+									"        pm.environment.set(\"accessToken\", jsonData.data.authData.accessToken);",
 									"    }",
 									"}"
 								],
@@ -1327,6 +1358,244 @@
 							"path": ["api", "admin", "services", "1"]
 						},
 						"description": "Servisi siler (sadece admin)"
+					}
+				}
+			]
+		},
+		{
+			"name": "Photos",
+			"item": [
+				{
+					"name": "Upload Photo (Barber)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "photo",
+									"type": "file",
+									"src": []
+								},
+								{
+									"key": "caption",
+									"value": "İşte benim çalışma alanım",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/photos/barber/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "photos", "barber", "1"]
+						},
+						"description": "Barber profili için fotoğraf yükler. Sadece barber'ın kendisi kendi profili için fotoğraf yükleyebilir."
+					}
+				},
+				{
+					"name": "Upload Photo (Shop)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "photo",
+									"type": "file",
+									"src": []
+								},
+								{
+									"key": "caption",
+									"value": "Salonumuzun iç görünümü",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/photos/shop/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "photos", "shop", "1"]
+						},
+						"description": "Shop için fotoğraf yükler. Sadece shop owner'ları fotoğraf yükleyebilir."
+					}
+				},
+				{
+					"name": "Get Photos (Barber)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/photos/barber/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "photos", "barber", "1"]
+						},
+						"description": "Barber'ın tüm fotoğraflarını listeler"
+					}
+				},
+				{
+					"name": "Get Photos (Shop)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/photos/shop/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "photos", "shop", "1"]
+						},
+						"description": "Shop'un tüm fotoğraflarını listeler"
+					}
+				},
+				{
+					"name": "Get Photo",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/photo/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "photo", "1"]
+						},
+						"description": "Tek bir fotoğrafın detayını getirir"
+					}
+				},
+				{
+					"name": "Delete Photo",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/photo/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "photo", "1"]
+						},
+						"description": "Fotoğrafı siler. Barber'lar sadece kendi profilindeki, shop owner'ları sadece kendi shop'undaki fotoğrafları silebilir."
+					}
+				}
+			]
+		},
+		{
+			"name": "Photo Likes",
+			"item": [
+				{
+					"name": "Like Photo",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/photo/1/like",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "photo", "1", "like"]
+						},
+						"description": "Fotoğrafı beğenir"
+					}
+				},
+				{
+					"name": "Unlike Photo",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/photo/1/like",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "photo", "1", "like"]
+						},
+						"description": "Fotoğraf beğenisini kaldırır"
+					}
+				},
+				{
+					"name": "Get Photo Likes",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/photo/1/likes",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "photo", "1", "likes"]
+						},
+						"description": "Fotoğrafın tüm beğenilerini listeler"
+					}
+				},
+				{
+					"name": "Get Photo Like Count",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/photo/1/likes/count",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "photo", "1", "likes", "count"]
+						},
+						"description": "Fotoğrafın beğeni sayısını getirir"
+					}
+				},
+				{
+					"name": "Is Photo Liked",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/photo/1/liked",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "photo", "1", "liked"]
+						},
+						"description": "Kullanıcının bu fotoğrafı beğenip beğenmediğini kontrol eder"
 					}
 				}
 			]

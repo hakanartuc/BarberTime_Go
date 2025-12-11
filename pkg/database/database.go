@@ -51,6 +51,8 @@ func AutoMigrate() error {
 		&models.BarberShopRequest{},
 		&models.BarberShop{},
 		&models.PhoneVerificationCode{},
+		&models.Photo{},
+		&models.PhotoLike{},
 	)
 
 	if err != nil {
@@ -75,6 +77,13 @@ func AutoMigrate() error {
 	DB.Exec(`
 		CREATE UNIQUE INDEX IF NOT EXISTS idx_shop_services_shop_service 
 		ON shop_services(shop_id, service_id) 
+		WHERE deleted_at IS NULL;
+	`)
+
+	// PhotoLike için composite unique index (bir kullanıcı aynı fotoğrafı birden fazla kez beğenemez)
+	DB.Exec(`
+		CREATE UNIQUE INDEX IF NOT EXISTS idx_photo_likes_user_photo 
+		ON photo_likes(user_id, photo_id) 
 		WHERE deleted_at IS NULL;
 	`)
 
