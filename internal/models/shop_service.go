@@ -9,7 +9,6 @@ import (
 type ShopService struct {
 	ID          uint           `gorm:"primaryKey" json:"id"`
 	ShopID      uint           `gorm:"not null;index" json:"shopId"`
-	Shop        Shop           `gorm:"foreignKey:ShopID" json:"shop,omitempty"`
 	ServiceID   uint           `gorm:"not null;index" json:"serviceId"`
 	Service     Service        `gorm:"foreignKey:ServiceID" json:"service,omitempty"`
 	Duration    int            `gorm:"not null" json:"duration"` // Dakika cinsinden

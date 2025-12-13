@@ -32,7 +32,7 @@ func (r *shopServiceRepository) Create(shopService *models.ShopService) error {
 
 func (r *shopServiceRepository) GetByID(id uint) (*models.ShopService, error) {
 	var shopService models.ShopService
-	err := r.db.Preload("Service").Preload("Shop").First(&shopService, id).Error
+	err := r.db.Preload("Service").First(&shopService, id).Error
 	if err != nil {
 		return nil, err
 	}

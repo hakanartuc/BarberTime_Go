@@ -5,6 +5,7 @@ import (
 	"barbertime_go/internal/utils"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -70,11 +71,10 @@ func (h *AppointmentHandler) GetAppointment(c *gin.Context) {
 }
 
 type CreateAppointmentRequest struct {
-	BarberID   uint   `json:"barberId" binding:"required"`
-	ServiceIDs []uint `json:"serviceIds" binding:"required"`
-	Date       string `json:"date" binding:"required"`
-	Time       string `json:"time" binding:"required"`
-	Notes      string `json:"notes"`
+	BarberID        uint   `json:"barberId" binding:"required"`
+	ServiceIDs      []uint `json:"serviceIds" binding:"required"`
+	AppointmentTime string `json:"appointmentTime" binding:"required"` // ISO 8601 format: 2025-12-15T14:00:00Z
+	Notes           string `json:"notes"`
 }
 
 func (h *AppointmentHandler) CreateAppointment(c *gin.Context) {
@@ -82,6 +82,13 @@ func (h *AppointmentHandler) CreateAppointment(c *gin.Context) {
 	var req CreateAppointmentRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		utils.BadRequest(c, err.Error())
+		return
+	}
+
+	// ISO 8601 formatında parse et (UTC)
+	appointmentTime, err := time.Parse(time.RFC3339, req.AppointmentTime)
+	if err != nil {
+		utils.BadRequest(c, "Invalid appointmentTime format. Use ISO 8601 format: 2025-12-15T14:00:00Z")
 		return
 	}
 
@@ -94,8 +101,7 @@ func (h *AppointmentHandler) CreateAppointment(c *gin.Context) {
 		userID.(uint),
 		req.BarberID,
 		req.ServiceIDs,
-		req.Date,
-		req.Time,
+		appointmentTime,
 		notes,
 	)
 	if err != nil {
@@ -121,4 +127,3 @@ func (h *AppointmentHandler) DeleteAppointment(c *gin.Context) {
 
 	utils.NoContentResponse(c, "Appointment cancelled successfully")
 }
-

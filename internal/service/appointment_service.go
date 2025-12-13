@@ -13,7 +13,7 @@ type AppointmentService interface {
 	GetPastAppointments(userID uint, page, limit int) ([]models.Appointment, utils.Pagination, error)
 	GetUpcomingAppointments(userID uint, page, limit int) ([]models.Appointment, utils.Pagination, error)
 	GetAppointmentByID(id uint) (*models.Appointment, error)
-	CreateAppointment(userID uint, barberID uint, serviceIDs []uint, date, timeStr string, notes *string) (*models.Appointment, error)
+	CreateAppointment(userID uint, barberID uint, serviceIDs []uint, appointmentTime time.Time, notes *string) (*models.Appointment, error)
 	CancelAppointment(id, userID uint) error
 }
 
@@ -66,30 +66,37 @@ func (s *appointmentService) GetAppointmentByID(id uint) (*models.Appointment, e
 	return appointment, nil
 }
 
-func (s *appointmentService) CreateAppointment(userID uint, barberID uint, serviceIDs []uint, date, timeStr string, notes *string) (*models.Appointment, error) {
+func (s *appointmentService) CreateAppointment(userID uint, barberID uint, serviceIDs []uint, appointmentTime time.Time, notes *string) (*models.Appointment, error) {
 	// Berber kontrolü
 	_, err := s.barberRepo.GetByID(barberID)
 	if err != nil {
 		return nil, errors.New("barber not found")
 	}
 
-	// Tarih ve saat validasyonu
-	if err := validateDateTime(date, timeStr); err != nil {
-		return nil, err
+	// UTC'ye çevir
+	appointmentTimeUTC := appointmentTime.UTC()
+
+	// Geçmiş tarih kontrolü
+	if appointmentTimeUTC.Before(time.Now().UTC()) {
+		return nil, errors.New("cannot create appointment in the past")
 	}
 
-	// Distributed lock key oluştur: barberID + date + time kombinasyonu
-	lockKey := fmt.Sprintf("appointment:lock:%d:%s:%s", barberID, date, timeStr)
-	lockTTL := 30 * time.Second // 30 saniye lock süresi
+	// Distributed lock key oluştur
+	lockKey := fmt.Sprintf("appointment:lock:%d:%s", barberID, appointmentTimeUTC.Format(time.RFC3339))
+	lockTTL := 30 * time.Second
 
 	// Distributed lock ile race condition'ı engelle
 	var appointment *models.Appointment
 	err = utils.WithLock(lockKey, lockTTL, func() error {
 		// Lock içinde tekrar müsaitlik kontrolü (double-check)
-		appointments, err := s.appointmentRepo.GetByBarberIDAndDate(barberID, date)
+		// Aynı saat için randevu var mı kontrol et (±1 dakika tolerans)
+		startCheck := appointmentTimeUTC.Add(-1 * time.Minute)
+		endCheck := appointmentTimeUTC.Add(1 * time.Minute)
+
+		existingAppointments, err := s.appointmentRepo.GetByBarberIDAndDateRange(barberID, startCheck, endCheck)
 		if err == nil {
-			for _, apt := range appointments {
-				if apt.Time == timeStr && apt.Status != models.StatusRejected {
+			for _, apt := range existingAppointments {
+				if apt.Status != models.StatusRejected {
 					return errors.New("this time slot is already booked")
 				}
 			}
@@ -106,13 +113,12 @@ func (s *appointmentService) CreateAppointment(userID uint, barberID uint, servi
 		}
 
 		appointment = &models.Appointment{
-			UserID:   userID,
-			BarberID: barberID,
-			Date:     date,
-			Time:     timeStr,
-			Status:   models.StatusPending,
-			Notes:    notes,
-			Services: services,
+			UserID:          userID,
+			BarberID:        barberID,
+			AppointmentTime: appointmentTimeUTC,
+			Status:          models.StatusPending,
+			Notes:           notes,
+			Services:        services,
 		}
 
 		if err := s.appointmentRepo.Create(appointment); err != nil {
@@ -149,28 +155,6 @@ func (s *appointmentService) CancelAppointment(id, userID uint) error {
 
 	// RabbitMQ'ya mesaj gönder
 	s.messageService.PublishAppointmentCancelled(id, userID)
-
-	return nil
-}
-
-func validateDateTime(date, timeStr string) error {
-	// Tarih formatı kontrolü (YYYY-MM-DD)
-	_, err := time.Parse("2006-01-02", date)
-	if err != nil {
-		return errors.New("invalid date format. Use YYYY-MM-DD")
-	}
-
-	// Saat formatı kontrolü (HH:mm)
-	_, err = time.Parse("15:04", timeStr)
-	if err != nil {
-		return errors.New("invalid time format. Use HH:mm")
-	}
-
-	// Geçmiş tarih kontrolü
-	appointmentDateTime, _ := time.Parse("2006-01-02 15:04", date+" "+timeStr)
-	if appointmentDateTime.Before(time.Now()) {
-		return errors.New("cannot create appointment in the past")
-	}
 
 	return nil
 }

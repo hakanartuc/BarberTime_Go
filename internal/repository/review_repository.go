@@ -47,7 +47,8 @@ func (r *reviewRepository) GetByTypeAndTargetID(reviewType models.ReviewType, ta
 
 	offset := (page - 1) * limit
 
-	query := r.db.Where("target_type = ? AND target_id = ?", string(reviewType), targetID).
+	query := r.db.Model(&models.Review{}).
+		Where("target_type = ? AND target_id = ?", string(reviewType), targetID).
 		Preload("User").Preload("Appointment")
 
 	if err := query.Count(&total).Error; err != nil {
@@ -69,7 +70,8 @@ func (r *reviewRepository) GetAll(page, limit int) ([]models.Review, int64, erro
 
 	offset := (page - 1) * limit
 
-	query := r.db.Preload("User").Preload("Appointment")
+	query := r.db.Model(&models.Review{}).
+		Preload("User").Preload("Appointment")
 
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err

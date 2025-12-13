@@ -87,7 +87,7 @@ func (s *barberService) DeleteBarberCache(barberID uint) {
 }
 
 func (s *barberService) GetAvailability(barberID uint, startDate, endDate string) ([]AvailabilitySlot, error) {
-	// Tarih aralığını parse et
+	// Tarih aralığını parse et (UTC olarak)
 	start, err := time.Parse("2006-01-02", startDate)
 	if err != nil {
 		return nil, errors.New("invalid start date format")
@@ -111,14 +111,17 @@ func (s *barberService) GetAvailability(barberID uint, startDate, endDate string
 	for !currentDate.After(end) {
 		dateStr := currentDate.Format("2006-01-02")
 
-		// Bu tarihteki randevuları getir
-		appointments, _ := s.appointmentRepo.GetByBarberIDAndDate(barberID, dateStr)
+		// Bu tarihteki randevuları getir (günün başından sonuna)
+		dayStart := time.Date(currentDate.Year(), currentDate.Month(), currentDate.Day(), 0, 0, 0, 0, time.UTC)
+		dayEnd := dayStart.AddDate(0, 0, 1)
+
+		appointments, _ := s.appointmentRepo.GetByBarberIDAndDateRange(barberID, dayStart, dayEnd)
 
 		// Meşgul saatleri belirle
 		busyTimes := make(map[string]bool)
 		for _, apt := range appointments {
 			if apt.Status != models.StatusRejected {
-				busyTimes[apt.Time] = true
+				busyTimes[apt.AppointmentTime.UTC().Format("15:04")] = true
 			}
 		}
 
@@ -175,5 +178,5 @@ func isPastDateTime(date, timeStr string) bool {
 	if err != nil {
 		return false
 	}
-	return datetime.Before(time.Now())
+	return datetime.Before(time.Now().UTC())
 }

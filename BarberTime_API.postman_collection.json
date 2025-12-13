@@ -299,13 +299,14 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"barberId\": 1,\n    \"serviceIds\": [1, 2],\n    \"date\": \"2025-12-15\",\n    \"time\": \"14:00\",\n    \"notes\": \"Kısa saç kesimi\"\n}"
+							"raw": "{\n    \"barberId\": 1,\n    \"serviceIds\": [1, 2],\n    \"appointmentTime\": \"2025-12-15T14:00:00Z\",\n    \"notes\": \"Kısa saç kesimi\"\n}"
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/appointments",
 							"host": ["{{baseUrl}}"],
 							"path": ["api", "appointments"]
-						}
+						},
+						"description": "Yeni randevu oluşturur. appointmentTime ISO 8601 formatında UTC olarak gönderilir (örn: 2025-12-15T14:00:00Z)"
 					}
 				},
 				{

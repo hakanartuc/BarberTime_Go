@@ -13,7 +13,7 @@ type AppointmentRepository interface {
 	GetByID(id uint) (*models.Appointment, error)
 	GetPastByUserID(userID uint, page, limit int) ([]models.Appointment, int64, error)
 	GetUpcomingByUserID(userID uint, page, limit int) ([]models.Appointment, int64, error)
-	GetByBarberIDAndDate(barberID uint, date string) ([]models.Appointment, error)
+	GetByBarberIDAndDateRange(barberID uint, startTime, endTime time.Time) ([]models.Appointment, error)
 	Update(appointment *models.Appointment) error
 	Delete(id uint) error
 }
@@ -34,7 +34,7 @@ func (r *appointmentRepository) Create(appointment *models.Appointment) error {
 
 func (r *appointmentRepository) GetByID(id uint) (*models.Appointment, error) {
 	var appointment models.Appointment
-	err := r.db.Preload("User").Preload("Barber").Preload("Barber.Shop").Preload("Services").First(&appointment, id).Error
+	err := r.db.Preload("User").Preload("Barber").Preload("Barber.Shops").Preload("Services").First(&appointment, id).Error
 	if err != nil {
 		return nil, err
 	}
@@ -46,12 +46,12 @@ func (r *appointmentRepository) GetPastByUserID(userID uint, page, limit int) ([
 	var total int64
 
 	offset := (page - 1) * limit
-	today := time.Now().Format("2006-01-02")
+	now := time.Now().UTC()
 
-	query := r.db.Where("user_id = ? AND (date < ? OR (date = ? AND time < ?))", 
-		userID, today, today, time.Now().Format("15:04")).
-		Preload("User").Preload("Barber").Preload("Barber.Shop").Preload("Services").
-		Order("date DESC, time DESC")
+	query := r.db.Model(&models.Appointment{}).
+		Where("user_id = ? AND appointment_time < ?", userID, now).
+		Preload("User").Preload("Barber").Preload("Barber.Shops").Preload("Services").
+		Order("appointment_time DESC")
 
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
@@ -66,12 +66,12 @@ func (r *appointmentRepository) GetUpcomingByUserID(userID uint, page, limit int
 	var total int64
 
 	offset := (page - 1) * limit
-	today := time.Now().Format("2006-01-02")
+	now := time.Now().UTC()
 
-	query := r.db.Where("user_id = ? AND (date > ? OR (date = ? AND time >= ?))", 
-		userID, today, today, time.Now().Format("15:04")).
-		Preload("User").Preload("Barber").Preload("Barber.Shop").Preload("Services").
-		Order("date ASC, time ASC")
+	query := r.db.Model(&models.Appointment{}).
+		Where("user_id = ? AND appointment_time >= ?", userID, now).
+		Preload("User").Preload("Barber").Preload("Barber.Shops").Preload("Services").
+		Order("appointment_time ASC")
 
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err
@@ -81,9 +81,10 @@ func (r *appointmentRepository) GetUpcomingByUserID(userID uint, page, limit int
 	return appointments, total, err
 }
 
-func (r *appointmentRepository) GetByBarberIDAndDate(barberID uint, date string) ([]models.Appointment, error) {
+func (r *appointmentRepository) GetByBarberIDAndDateRange(barberID uint, startTime, endTime time.Time) ([]models.Appointment, error) {
 	var appointments []models.Appointment
-	err := r.db.Where("barber_id = ? AND date = ?", barberID, date).
+	err := r.db.Where("barber_id = ? AND appointment_time >= ? AND appointment_time < ?", barberID, startTime.UTC(), endTime.UTC()).
+		Order("appointment_time ASC").
 		Find(&appointments).Error
 	return appointments, err
 }
@@ -95,4 +96,3 @@ func (r *appointmentRepository) Update(appointment *models.Appointment) error {
 func (r *appointmentRepository) Delete(id uint) error {
 	return r.db.Delete(&models.Appointment{}, id).Error
 }
-
