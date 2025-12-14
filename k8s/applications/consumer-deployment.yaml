@@ -15,10 +15,12 @@ spec:
       labels:
         app: barbertime-consumer
     spec:
+      imagePullSecrets:
+      - name: dockerhub-secret
       containers:
       - name: consumer
         image: hakanartuc/barbertime:queue-consumer-dev-go-latest
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         envFrom:
         - configMapRef:
             name: consumer-config

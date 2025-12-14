@@ -45,14 +45,18 @@ spec:
           httpGet:
             path: /_cluster/health
             port: 9200
-          initialDelaySeconds: 60
+          initialDelaySeconds: 120
           periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 6
         readinessProbe:
           httpGet:
             path: /_cluster/health
             port: 9200
-          initialDelaySeconds: 30
-          periodSeconds: 10
+          initialDelaySeconds: 90
+          periodSeconds: 15
+          timeoutSeconds: 10
+          failureThreshold: 6
         resources:
           requests:
             memory: "512Mi"

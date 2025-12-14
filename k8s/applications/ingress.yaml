@@ -4,16 +4,17 @@ metadata:
   name: barbertime-api-ingress
   namespace: barbertime-dev
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
 spec:
   ingressClassName: nginx
   rules:
-  - host: api.barbertime.local
-    http:
+  - http:
       paths:
-      - path: /
-        pathType: Prefix
+      # /barbertime-dev/ veya /barbertime-dev/xxx → API'ye yönlendirir
+      - path: /barbertime-dev(/|$)(.*)
+        pathType: ImplementationSpecific
         backend:
           service:
             name: barbertime-api

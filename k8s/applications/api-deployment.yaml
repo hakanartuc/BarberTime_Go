@@ -15,10 +15,12 @@ spec:
       labels:
         app: barbertime-api
     spec:
+      imagePullSecrets:
+      - name: dockerhub-secret
       containers:
       - name: api
         image: hakanartuc/barbertime:api-dev-go-latest
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         ports:
         - containerPort: 8080
           name: http
@@ -65,7 +67,7 @@ metadata:
   namespace: barbertime-dev
 spec:
   accessModes:
-    - ReadWriteMany
+    - ReadWriteOnce
   resources:
     requests:
       storage: 10Gi
