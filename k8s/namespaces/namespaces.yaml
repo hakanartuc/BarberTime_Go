@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: barbertime-dev-infrastructure
+  labels:
+    name: barbertime-dev-infrastructure
+    environment: development
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: barbertime-dev
+  labels:
+    name: barbertime-dev
+    environment: development

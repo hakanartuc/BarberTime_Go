@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: consumer-config
+  namespace: barbertime-dev
+data:
+  DB_HOST: "postgresql.barbertime-dev-infrastructure.svc.cluster.local"
+  DB_PORT: "5432"
+  DB_USER: "postgres"
+  DB_NAME: "barbertime"
+  DB_SSLMODE: "disable"
+  ELASTICSEARCH_URL: "http://elasticsearch.barbertime-dev-infrastructure.svc.cluster.local:9200"
+  ELASTICSEARCH_INDEX_PREFIX: "barbertime"
+  RABBITMQ_URL: "amqp://guest:guest@rabbitmq.barbertime-dev-infrastructure.svc.cluster.local:5672/"
