@@ -39,6 +39,6 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           context: .
-          file: ././src/BarberTime.Web.API/Dockerfile
+          file: ./Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
