@@ -10,6 +10,9 @@ import (
 type MessageService interface {
 	PublishAppointmentCreated(appointmentID uint, userID uint, barberID uint) error
 	PublishAppointmentCancelled(appointmentID uint, userID uint) error
+	PublishAppointmentApproved(appointmentID uint, userID uint, barberID uint) error
+	PublishAppointmentRejected(appointmentID uint, userID uint, barberID uint) error
+	PublishAppointmentCompleted(appointmentID uint, userID uint, barberID uint) error
 	PublishReviewCreated(reviewID uint, targetType string, targetID uint) error
 	PublishBarberCreated(barberID uint) error
 	PublishBarberUpdated(barberID uint) error
@@ -33,6 +36,13 @@ type AppointmentCreatedMessage struct {
 type AppointmentCancelledMessage struct {
 	AppointmentID uint   `json:"appointmentId"`
 	UserID        uint   `json:"userId"`
+	EventType     string `json:"eventType"`
+}
+
+type AppointmentStatusChangedMessage struct {
+	AppointmentID uint   `json:"appointmentId"`
+	UserID        uint   `json:"userId"`
+	BarberID      uint   `json:"barberId"`
 	EventType     string `json:"eventType"`
 }
 
@@ -77,6 +87,51 @@ func (s *messageService) PublishAppointmentCancelled(appointmentID uint, userID 
 		AppointmentID: appointmentID,
 		UserID:        userID,
 		EventType:     "appointment.cancelled",
+	}
+
+	return rabbitmq.Publish("appointments", message)
+}
+
+func (s *messageService) PublishAppointmentApproved(appointmentID uint, userID uint, barberID uint) error {
+	if rabbitmq.Channel == nil {
+		return nil
+	}
+
+	message := AppointmentStatusChangedMessage{
+		AppointmentID: appointmentID,
+		UserID:        userID,
+		BarberID:      barberID,
+		EventType:     "appointment.approved",
+	}
+
+	return rabbitmq.Publish("appointments", message)
+}
+
+func (s *messageService) PublishAppointmentRejected(appointmentID uint, userID uint, barberID uint) error {
+	if rabbitmq.Channel == nil {
+		return nil
+	}
+
+	message := AppointmentStatusChangedMessage{
+		AppointmentID: appointmentID,
+		UserID:        userID,
+		BarberID:      barberID,
+		EventType:     "appointment.rejected",
+	}
+
+	return rabbitmq.Publish("appointments", message)
+}
+
+func (s *messageService) PublishAppointmentCompleted(appointmentID uint, userID uint, barberID uint) error {
+	if rabbitmq.Channel == nil {
+		return nil
+	}
+
+	message := AppointmentStatusChangedMessage{
+		AppointmentID: appointmentID,
+		UserID:        userID,
+		BarberID:      barberID,
+		EventType:     "appointment.completed",
 	}
 
 	return rabbitmq.Publish("appointments", message)

@@ -16,6 +16,11 @@ type AppointmentRepository interface {
 	GetByBarberIDAndDateRange(barberID uint, startTime, endTime time.Time) ([]models.Appointment, error)
 	Update(appointment *models.Appointment) error
 	Delete(id uint) error
+
+	// Barber appointment methods
+	GetPendingByBarberID(barberID uint, page, limit int) ([]models.Appointment, int64, error)
+	GetUpcomingByBarberID(barberID uint, page, limit int) ([]models.Appointment, int64, error)
+	GetPastByBarberID(barberID uint, page, limit int) ([]models.Appointment, int64, error)
 }
 
 type appointmentRepository struct {
@@ -95,4 +100,66 @@ func (r *appointmentRepository) Update(appointment *models.Appointment) error {
 
 func (r *appointmentRepository) Delete(id uint) error {
 	return r.db.Delete(&models.Appointment{}, id).Error
+}
+
+// GetPendingByBarberID returns pending appointments for a barber
+func (r *appointmentRepository) GetPendingByBarberID(barberID uint, page, limit int) ([]models.Appointment, int64, error) {
+	var appointments []models.Appointment
+	var total int64
+
+	offset := (page - 1) * limit
+
+	query := r.db.Model(&models.Appointment{}).
+		Where("barber_id = ? AND status = ?", barberID, models.StatusPending).
+		Preload("User").Preload("Barber").Preload("Barber.Shops").Preload("Services").
+		Order("appointment_time ASC")
+
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	err := query.Offset(offset).Limit(limit).Find(&appointments).Error
+	return appointments, total, err
+}
+
+// GetUpcomingByBarberID returns approved upcoming appointments for a barber
+func (r *appointmentRepository) GetUpcomingByBarberID(barberID uint, page, limit int) ([]models.Appointment, int64, error) {
+	var appointments []models.Appointment
+	var total int64
+
+	offset := (page - 1) * limit
+	now := time.Now().UTC()
+
+	query := r.db.Model(&models.Appointment{}).
+		Where("barber_id = ? AND status = ? AND appointment_time >= ?", barberID, models.StatusApproved, now).
+		Preload("User").Preload("Barber").Preload("Barber.Shops").Preload("Services").
+		Order("appointment_time ASC")
+
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	err := query.Offset(offset).Limit(limit).Find(&appointments).Error
+	return appointments, total, err
+}
+
+// GetPastByBarberID returns past appointments for a barber (completed or past time)
+func (r *appointmentRepository) GetPastByBarberID(barberID uint, page, limit int) ([]models.Appointment, int64, error) {
+	var appointments []models.Appointment
+	var total int64
+
+	offset := (page - 1) * limit
+	now := time.Now().UTC()
+
+	query := r.db.Model(&models.Appointment{}).
+		Where("barber_id = ? AND (status = ? OR appointment_time < ?)", barberID, models.StatusCompleted, now).
+		Preload("User").Preload("Barber").Preload("Barber.Shops").Preload("Services").
+		Order("appointment_time DESC")
+
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	err := query.Offset(offset).Limit(limit).Find(&appointments).Error
+	return appointments, total, err
 }

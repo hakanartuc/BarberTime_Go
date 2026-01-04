@@ -840,6 +840,152 @@
 						},
 						"description": "Barber'ın kendi profilini günceller"
 					}
+				},
+				{
+					"name": "Get Pending Appointments (Barber)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/barber/appointments/pending?page=1&limit=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "barber", "appointments", "pending"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Berber'ın bekleyen (onay bekleyen) randevularını listeler"
+					}
+				},
+				{
+					"name": "Get Upcoming Appointments (Barber)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/barber/appointments/upcoming?page=1&limit=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "barber", "appointments", "upcoming"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Berber'ın onaylanmış ve gelecek tarihli randevularını listeler"
+					}
+				},
+				{
+					"name": "Get Past Appointments (Barber)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/barber/appointments/past?page=1&limit=10",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "barber", "appointments", "past"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Berber'ın geçmiş randevularını listeler (tamamlanmış veya tarihi geçmiş)"
+					}
+				},
+				{
+					"name": "Approve Appointment",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/barber/appointments/1/approve",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "barber", "appointments", "1", "approve"]
+						},
+						"description": "Berber bekleyen bir randevuyu onaylar. Sadece 'pending' durumundaki randevular onaylanabilir."
+					}
+				},
+				{
+					"name": "Reject Appointment",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"reason\": \"Maalesef bu saatte müsait değilim\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/barber/appointments/1/reject",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "barber", "appointments", "1", "reject"]
+						},
+						"description": "Berber bir randevuyu reddeder. 'pending' veya 'approved' durumundaki randevular reddedilebilir. reason alanı opsiyoneldir."
+					}
+				},
+				{
+					"name": "Complete Appointment",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/barber/appointments/1/complete",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "barber", "appointments", "1", "complete"]
+						},
+						"description": "Berber bir randevuyu tamamlandı olarak işaretler. Sadece 'approved' durumunda ve randevu zamanı geçmiş randevular tamamlanabilir."
+					}
 				}
 			]
 		},

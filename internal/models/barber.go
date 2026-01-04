@@ -9,7 +9,6 @@ import (
 type Barber struct {
 	ID         uint           `gorm:"primaryKey" json:"id"`
 	UserID     uint           `gorm:"uniqueIndex;not null" json:"userId"`
-	User       User           `gorm:"foreignKey:UserID" json:"user,omitempty"`
 	Name       string         `gorm:"not null" json:"name"`
 	Avatar     *string        `json:"avatar"`
 	Bio        string         `json:"bio"`

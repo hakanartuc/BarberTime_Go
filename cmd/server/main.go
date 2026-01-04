@@ -180,6 +180,14 @@ func main() {
 			barberProfile.POST("/register", barberProfileHandler.RegisterAsBarber)
 			barberProfile.GET("/profile", barberProfileHandler.GetBarberProfile)
 			barberProfile.PATCH("/profile", barberProfileHandler.UpdateBarberProfile)
+
+			// Barber Appointment routes
+			barberProfile.GET("/appointments/pending", appointmentHandler.GetBarberPendingAppointments)
+			barberProfile.GET("/appointments/upcoming", appointmentHandler.GetBarberUpcomingAppointments)
+			barberProfile.GET("/appointments/past", appointmentHandler.GetBarberPastAppointments)
+			barberProfile.POST("/appointments/:id/approve", appointmentHandler.ApproveAppointment)
+			barberProfile.POST("/appointments/:id/reject", appointmentHandler.RejectAppointment)
+			barberProfile.POST("/appointments/:id/complete", appointmentHandler.CompleteAppointment)
 		}
 
 		// Shop routes
@@ -253,14 +261,14 @@ func main() {
 		photos := protected.Group("/photos")
 		{
 			// İki parametreli route'lar (type ve id)
-			photos.POST("/:type/:id", photoHandler.UploadPhoto)        // type: barber veya shop
-			photos.GET("/:type/:id", photoHandler.GetPhotos)            // type: barber veya shop
+			photos.POST("/:type/:id", photoHandler.UploadPhoto) // type: barber veya shop
+			photos.GET("/:type/:id", photoHandler.GetPhotos)    // type: barber veya shop
 		}
 
 		// Photo (tekil) routes - çakışmayı önlemek için ayrı path
 		photo := protected.Group("/photo")
 		{
-			photo.GET("/:id", photoHandler.GetPhoto)                   // Tek fotoğraf detayı
+			photo.GET("/:id", photoHandler.GetPhoto) // Tek fotoğraf detayı
 			photo.DELETE("/:id", photoHandler.DeletePhoto)
 		}
 

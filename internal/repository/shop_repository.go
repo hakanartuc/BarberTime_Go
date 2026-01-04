@@ -11,6 +11,7 @@ type ShopRepository interface {
 	Create(shop *models.Shop) error
 	GetByID(id uint) (*models.Shop, error)
 	GetNearby(latitude, longitude float64, maxDistanceKM *float64, page, limit int) ([]models.Shop, int64, error)
+	SearchByName(query string, page, limit int) ([]models.Shop, int64, error)
 	GetPendingShops(page, limit int) ([]models.Shop, int64, error)
 	Update(shop *models.Shop) error
 	Delete(id uint) error
@@ -91,4 +92,23 @@ func (r *shopRepository) Update(shop *models.Shop) error {
 
 func (r *shopRepository) Delete(id uint) error {
 	return r.db.Delete(&models.Shop{}, id).Error
+}
+
+// SearchByName searches shops by name (case-insensitive LIKE query)
+func (r *shopRepository) SearchByName(query string, page, limit int) ([]models.Shop, int64, error) {
+	var shops []models.Shop
+	var total int64
+
+	offset := (page - 1) * limit
+
+	baseQuery := r.db.Model(&models.Shop{}).
+		Where("status = ?", models.ShopStatusConfirmed).
+		Where("LOWER(name) LIKE LOWER(?)", "%"+query+"%")
+
+	if err := baseQuery.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	err := baseQuery.Offset(offset).Limit(limit).Order("name ASC").Find(&shops).Error
+	return shops, total, err
 }

@@ -10,11 +10,20 @@ import (
 )
 
 type AppointmentService interface {
+	// Customer appointment methods
 	GetPastAppointments(userID uint, page, limit int) ([]models.Appointment, utils.Pagination, error)
 	GetUpcomingAppointments(userID uint, page, limit int) ([]models.Appointment, utils.Pagination, error)
 	GetAppointmentByID(id uint) (*models.Appointment, error)
 	CreateAppointment(userID uint, barberID uint, serviceIDs []uint, appointmentTime time.Time, notes *string) (*models.Appointment, error)
 	CancelAppointment(id, userID uint) error
+
+	// Barber appointment methods
+	GetBarberPendingAppointments(userID uint, page, limit int) ([]models.Appointment, utils.Pagination, error)
+	GetBarberUpcomingAppointments(userID uint, page, limit int) ([]models.Appointment, utils.Pagination, error)
+	GetBarberPastAppointments(userID uint, page, limit int) ([]models.Appointment, utils.Pagination, error)
+	ApproveAppointment(appointmentID, userID uint) error
+	RejectAppointment(appointmentID, userID uint, reason *string) error
+	CompleteAppointment(appointmentID, userID uint) error
 }
 
 type appointmentService struct {
@@ -155,6 +164,170 @@ func (s *appointmentService) CancelAppointment(id, userID uint) error {
 
 	// RabbitMQ'ya mesaj gönder
 	s.messageService.PublishAppointmentCancelled(id, userID)
+
+	return nil
+}
+
+// getBarberByUserID helper function to get barber by user ID
+func (s *appointmentService) getBarberByUserID(userID uint) (*models.Barber, error) {
+	barber, err := s.barberRepo.GetByUserID(userID)
+	if err != nil {
+		return nil, errors.New("barber profile not found")
+	}
+	return barber, nil
+}
+
+// GetBarberPendingAppointments returns pending appointments for the barber
+func (s *appointmentService) GetBarberPendingAppointments(userID uint, page, limit int) ([]models.Appointment, utils.Pagination, error) {
+	barber, err := s.getBarberByUserID(userID)
+	if err != nil {
+		return nil, utils.Pagination{}, err
+	}
+
+	appointments, total, err := s.appointmentRepo.GetPendingByBarberID(barber.ID, page, limit)
+	if err != nil {
+		return nil, utils.Pagination{}, err
+	}
+
+	pagination := utils.NewPagination(page, limit, total)
+	return appointments, pagination, nil
+}
+
+// GetBarberUpcomingAppointments returns approved upcoming appointments for the barber
+func (s *appointmentService) GetBarberUpcomingAppointments(userID uint, page, limit int) ([]models.Appointment, utils.Pagination, error) {
+	barber, err := s.getBarberByUserID(userID)
+	if err != nil {
+		return nil, utils.Pagination{}, err
+	}
+
+	appointments, total, err := s.appointmentRepo.GetUpcomingByBarberID(barber.ID, page, limit)
+	if err != nil {
+		return nil, utils.Pagination{}, err
+	}
+
+	pagination := utils.NewPagination(page, limit, total)
+	return appointments, pagination, nil
+}
+
+// GetBarberPastAppointments returns past appointments for the barber
+func (s *appointmentService) GetBarberPastAppointments(userID uint, page, limit int) ([]models.Appointment, utils.Pagination, error) {
+	barber, err := s.getBarberByUserID(userID)
+	if err != nil {
+		return nil, utils.Pagination{}, err
+	}
+
+	appointments, total, err := s.appointmentRepo.GetPastByBarberID(barber.ID, page, limit)
+	if err != nil {
+		return nil, utils.Pagination{}, err
+	}
+
+	pagination := utils.NewPagination(page, limit, total)
+	return appointments, pagination, nil
+}
+
+// ApproveAppointment approves a pending appointment
+func (s *appointmentService) ApproveAppointment(appointmentID, userID uint) error {
+	barber, err := s.getBarberByUserID(userID)
+	if err != nil {
+		return err
+	}
+
+	appointment, err := s.appointmentRepo.GetByID(appointmentID)
+	if err != nil {
+		return errors.New("appointment not found")
+	}
+
+	// Verify this appointment belongs to this barber
+	if appointment.BarberID != barber.ID {
+		return errors.New("unauthorized")
+	}
+
+	// Only pending appointments can be approved
+	if appointment.Status != models.StatusPending {
+		return errors.New("only pending appointments can be approved")
+	}
+
+	appointment.Status = models.StatusApproved
+	if err := s.appointmentRepo.Update(appointment); err != nil {
+		return err
+	}
+
+	// Publish event
+	s.messageService.PublishAppointmentApproved(appointmentID, appointment.UserID, barber.ID)
+
+	return nil
+}
+
+// RejectAppointment rejects an appointment
+func (s *appointmentService) RejectAppointment(appointmentID, userID uint, reason *string) error {
+	barber, err := s.getBarberByUserID(userID)
+	if err != nil {
+		return err
+	}
+
+	appointment, err := s.appointmentRepo.GetByID(appointmentID)
+	if err != nil {
+		return errors.New("appointment not found")
+	}
+
+	// Verify this appointment belongs to this barber
+	if appointment.BarberID != barber.ID {
+		return errors.New("unauthorized")
+	}
+
+	// Only pending or approved appointments can be rejected
+	if appointment.Status != models.StatusPending && appointment.Status != models.StatusApproved {
+		return errors.New("only pending or approved appointments can be rejected")
+	}
+
+	appointment.Status = models.StatusRejected
+	if reason != nil {
+		appointment.Notes = reason
+	}
+	if err := s.appointmentRepo.Update(appointment); err != nil {
+		return err
+	}
+
+	// Publish event
+	s.messageService.PublishAppointmentRejected(appointmentID, appointment.UserID, barber.ID)
+
+	return nil
+}
+
+// CompleteAppointment marks an appointment as completed
+func (s *appointmentService) CompleteAppointment(appointmentID, userID uint) error {
+	barber, err := s.getBarberByUserID(userID)
+	if err != nil {
+		return err
+	}
+
+	appointment, err := s.appointmentRepo.GetByID(appointmentID)
+	if err != nil {
+		return errors.New("appointment not found")
+	}
+
+	// Verify this appointment belongs to this barber
+	if appointment.BarberID != barber.ID {
+		return errors.New("unauthorized")
+	}
+
+	// Only approved appointments can be completed
+	if appointment.Status != models.StatusApproved {
+		return errors.New("only approved appointments can be completed")
+	}
+
+	// Appointment time must be in the past
+	if appointment.AppointmentTime.After(time.Now().UTC()) {
+		return errors.New("cannot complete an appointment before its scheduled time")
+	}
+
+	appointment.Status = models.StatusCompleted
+	if err := s.appointmentRepo.Update(appointment); err != nil {
+		return err
+	}
+
+	// Publish event
+	s.messageService.PublishAppointmentCompleted(appointmentID, appointment.UserID, barber.ID)
 
 	return nil
 }

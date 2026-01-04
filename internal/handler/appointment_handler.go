@@ -127,3 +127,131 @@ func (h *AppointmentHandler) DeleteAppointment(c *gin.Context) {
 
 	utils.NoContentResponse(c, "Appointment cancelled successfully")
 }
+
+// ============================================
+// Barber Appointment Handlers
+// ============================================
+
+// GetBarberPendingAppointments returns pending appointments for the barber
+func (h *AppointmentHandler) GetBarberPendingAppointments(c *gin.Context) {
+	userID, _ := c.Get("userID")
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+
+	appointments, pagination, err := h.appointmentService.GetBarberPendingAppointments(userID.(uint), page, limit)
+	if err != nil {
+		utils.BadRequest(c, err.Error())
+		return
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, gin.H{
+		"appointments": appointments,
+		"pagination":   pagination,
+	})
+}
+
+// GetBarberUpcomingAppointments returns approved upcoming appointments for the barber
+func (h *AppointmentHandler) GetBarberUpcomingAppointments(c *gin.Context) {
+	userID, _ := c.Get("userID")
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+
+	appointments, pagination, err := h.appointmentService.GetBarberUpcomingAppointments(userID.(uint), page, limit)
+	if err != nil {
+		utils.BadRequest(c, err.Error())
+		return
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, gin.H{
+		"appointments": appointments,
+		"pagination":   pagination,
+	})
+}
+
+// GetBarberPastAppointments returns past appointments for the barber
+func (h *AppointmentHandler) GetBarberPastAppointments(c *gin.Context) {
+	userID, _ := c.Get("userID")
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+
+	appointments, pagination, err := h.appointmentService.GetBarberPastAppointments(userID.(uint), page, limit)
+	if err != nil {
+		utils.BadRequest(c, err.Error())
+		return
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, gin.H{
+		"appointments": appointments,
+		"pagination":   pagination,
+	})
+}
+
+// ApproveAppointment approves a pending appointment
+func (h *AppointmentHandler) ApproveAppointment(c *gin.Context) {
+	userID, _ := c.Get("userID")
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		utils.BadRequest(c, "Invalid appointment ID")
+		return
+	}
+
+	if err := h.appointmentService.ApproveAppointment(uint(id), userID.(uint)); err != nil {
+		utils.BadRequest(c, err.Error())
+		return
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, gin.H{
+		"message": "Appointment approved successfully",
+	})
+}
+
+// RejectAppointmentRequest represents the reject appointment request body
+type RejectAppointmentRequest struct {
+	Reason string `json:"reason"`
+}
+
+// RejectAppointment rejects an appointment
+func (h *AppointmentHandler) RejectAppointment(c *gin.Context) {
+	userID, _ := c.Get("userID")
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		utils.BadRequest(c, "Invalid appointment ID")
+		return
+	}
+
+	var req RejectAppointmentRequest
+	c.ShouldBindJSON(&req) // Opsiyonel body, hata olursa da devam et
+
+	var reason *string
+	if req.Reason != "" {
+		reason = &req.Reason
+	}
+
+	if err := h.appointmentService.RejectAppointment(uint(id), userID.(uint), reason); err != nil {
+		utils.BadRequest(c, err.Error())
+		return
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, gin.H{
+		"message": "Appointment rejected successfully",
+	})
+}
+
+// CompleteAppointment marks an appointment as completed
+func (h *AppointmentHandler) CompleteAppointment(c *gin.Context) {
+	userID, _ := c.Get("userID")
+	id, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		utils.BadRequest(c, "Invalid appointment ID")
+		return
+	}
+
+	if err := h.appointmentService.CompleteAppointment(uint(id), userID.(uint)); err != nil {
+		utils.BadRequest(c, err.Error())
+		return
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, gin.H{
+		"message": "Appointment completed successfully",
+	})
+}
