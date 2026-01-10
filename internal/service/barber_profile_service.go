@@ -11,7 +11,7 @@ import (
 type BarberProfileService interface {
 	RegisterAsBarber(userID uint, name string, bio string, experience int) (*models.Barber, error)
 	GetBarberProfile(userID uint) (*models.Barber, error)
-	UpdateBarberProfile(userID uint, name *string, bio *string, experience *int, avatar *string) (*models.Barber, error)
+	UpdateBarberProfile(userID uint, name *string, bio *string, experience *int) (*models.Barber, error)
 }
 
 type barberProfileService struct {
@@ -32,7 +32,7 @@ func NewBarberProfileService(barberRepo repository.BarberRepository, userRepo re
 
 func (s *barberProfileService) RegisterAsBarber(userID uint, name string, bio string, experience int) (*models.Barber, error) {
 	// Kullanıcı kontrolü
-	user, err := s.userRepo.GetByID(userID)
+	_, err := s.userRepo.GetByID(userID)
 	if err != nil {
 		return nil, errors.New("user not found")
 	}
@@ -52,11 +52,6 @@ func (s *barberProfileService) RegisterAsBarber(userID uint, name string, bio st
 			Average:     0,
 			TotalReview: 0,
 		},
-	}
-
-	// User'dan avatar'ı kopyala
-	if user.Avatar != nil {
-		barber.Avatar = user.Avatar
 	}
 
 	// 1. DB'ye kaydet
@@ -81,14 +76,29 @@ func (s *barberProfileService) RegisterAsBarber(userID uint, name string, bio st
 }
 
 func (s *barberProfileService) GetBarberProfile(userID uint) (*models.Barber, error) {
+	// Önce userID ile barber ID'sini bulmak için DB'ye bakıyoruz
+	// Çünkü cache key'i barber:ID formatında
 	barber, err := s.barberRepo.GetByUserID(userID)
 	if err != nil {
 		return nil, errors.New("barber profile not found")
 	}
+
+	// Cache'den kontrol et
+	cacheKey := fmt.Sprintf("barber:%d", barber.ID)
+	var cachedBarber models.Barber
+	if err := s.cacheService.Get(cacheKey, &cachedBarber); err == nil {
+		// Avatar'ı User'dan al (cache'deki barber'da User yok)
+		cachedBarber.Avatar = barber.Avatar
+		return &cachedBarber, nil
+	}
+
+	// Cache'e kaydet
+	s.cacheService.Set(cacheKey, barber, 1*time.Hour)
+
 	return barber, nil
 }
 
-func (s *barberProfileService) UpdateBarberProfile(userID uint, name *string, bio *string, experience *int, avatar *string) (*models.Barber, error) {
+func (s *barberProfileService) UpdateBarberProfile(userID uint, name *string, bio *string, experience *int) (*models.Barber, error) {
 	barber, err := s.barberRepo.GetByUserID(userID)
 	if err != nil {
 		return nil, errors.New("barber profile not found")
@@ -102,9 +112,6 @@ func (s *barberProfileService) UpdateBarberProfile(userID uint, name *string, bi
 	}
 	if experience != nil {
 		barber.Experience = *experience
-	}
-	if avatar != nil {
-		barber.Avatar = avatar
 	}
 
 	// 1. DB'yi güncelle

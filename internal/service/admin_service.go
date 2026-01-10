@@ -84,7 +84,15 @@ func (s *adminService) RejectShop(shopID uint) error {
 	}
 
 	shop.Status = models.ShopStatusRejected
-	return s.shopRepo.Update(shop)
+	if err := s.shopRepo.Update(shop); err != nil {
+		return err
+	}
+
+	// Cache'i invalidate et
+	cacheKey := fmt.Sprintf("shop:%d", shopID)
+	s.cacheService.Delete(cacheKey)
+
+	return nil
 }
 
 func (s *adminService) CreateService(name string) (*models.Service, error) {

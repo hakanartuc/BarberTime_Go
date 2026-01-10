@@ -112,10 +112,22 @@ func (s *shopProfileService) CreateShop(userID uint, name string, description st
 }
 
 func (s *shopProfileService) GetShopProfile(shopID uint) (*models.Shop, error) {
+	// Önce cache'den kontrol et
+	cacheKey := fmt.Sprintf("shop:%d", shopID)
+	var cachedShop models.Shop
+	if err := s.cacheService.Get(cacheKey, &cachedShop); err == nil {
+		return &cachedShop, nil
+	}
+
+	// Cache'de yoksa DB'den al
 	shop, err := s.shopRepo.GetByID(shopID)
 	if err != nil {
 		return nil, errors.New("shop not found")
 	}
+
+	// Cache'e kaydet
+	s.cacheService.Set(cacheKey, shop, 1*time.Hour)
+
 	return shop, nil
 }
 

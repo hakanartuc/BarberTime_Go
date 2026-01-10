@@ -10,7 +10,7 @@ type Barber struct {
 	ID         uint           `gorm:"primaryKey" json:"id"`
 	UserID     uint           `gorm:"uniqueIndex;not null" json:"userId"`
 	Name       string         `gorm:"not null" json:"name"`
-	Avatar     *string        `json:"avatar"`
+	Avatar     *string        `gorm:"-" json:"avatar"` // DB'de yok, User'dan alınır
 	Bio        string         `json:"bio"`
 	Experience int            `json:"experience"` // Yıl cinsinden
 	Rating     Rating         `gorm:"embedded;embeddedPrefix:rating_" json:"rating"`
@@ -18,6 +18,7 @@ type Barber struct {
 	UpdatedAt  time.Time      `json:"-"`
 	DeletedAt  gorm.DeletedAt `gorm:"index" json:"-"`
 
+	User         User                `gorm:"foreignKey:UserID" json:"-"`
 	Shops        []Shop              `gorm:"many2many:barber_shops;" json:"shops,omitempty"`
 	Appointments []Appointment       `gorm:"foreignKey:BarberID" json:"-"`
 	Reviews      []Review            `gorm:"polymorphic:Target;polymorphicValue:barber" json:"reviews,omitempty"`

@@ -33,21 +33,29 @@ func (r *barberRepository) Create(barber *models.Barber) error {
 
 func (r *barberRepository) GetByID(id uint) (*models.Barber, error) {
 	var barber models.Barber
-	err := r.db.Preload("Shops").Preload("Reviews").First(&barber, id).Error
+	err := r.db.Preload("User").Preload("Shops").Preload("Reviews").First(&barber, id).Error
 	if err != nil {
 		return nil, err
 	}
+
+	// Avatar'ı User'dan al
+	barber.Avatar = barber.User.Avatar
+
 	return &barber, nil
 }
 
 func (r *barberRepository) GetByUserID(userID uint) (*models.Barber, error) {
 	var barber models.Barber
 	err := r.db.Where("user_id = ?", userID).
-		Preload("Shops").Preload("Reviews").
+		Preload("User").Preload("Shops").Preload("Reviews").
 		First(&barber).Error
 	if err != nil {
 		return nil, err
 	}
+
+	// Avatar'ı User'dan al
+	barber.Avatar = barber.User.Avatar
+
 	return &barber, nil
 }
 
@@ -82,8 +90,17 @@ func (r *barberRepository) GetNearby(latitude, longitude float64, maxDistanceKM 
 	}
 
 	// Results with pagination
-	err := baseQuery.Offset(offset).Limit(limit).Preload("Shops").Find(&barbers).Error
-	return barbers, total, err
+	err := baseQuery.Offset(offset).Limit(limit).Preload("User").Preload("Shops").Find(&barbers).Error
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// Her barber için avatar'ı User'dan al
+	for i := range barbers {
+		barbers[i].Avatar = barbers[i].User.Avatar
+	}
+
+	return barbers, total, nil
 }
 
 func (r *barberRepository) Update(barber *models.Barber) error {
@@ -98,7 +115,16 @@ func (r *barberRepository) GetByShopID(shopID uint) ([]models.Barber, error) {
 	var barbers []models.Barber
 	err := r.db.Joins("JOIN barber_shops ON barbers.id = barber_shops.barber_id").
 		Where("barber_shops.shop_id = ? AND barber_shops.status = ?", shopID, models.BarberShopStatusApproved).
-		Preload("Shops").
+		Preload("User").Preload("Shops").
 		Find(&barbers).Error
-	return barbers, err
+	if err != nil {
+		return nil, err
+	}
+
+	// Her barber için avatar'ı User'dan al
+	for i := range barbers {
+		barbers[i].Avatar = barbers[i].User.Avatar
+	}
+
+	return barbers, nil
 }

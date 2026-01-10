@@ -82,6 +82,13 @@ func (s *shopService) GetShopBarbers(shopID uint) ([]models.Barber, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// Her barber'ı cache'e kaydet
+	for i := range barbers {
+		cacheKey := fmt.Sprintf("barber:%d", barbers[i].ID)
+		s.cacheService.Set(cacheKey, &barbers[i], 1*time.Hour)
+	}
+
 	return barbers, nil
 }
 
