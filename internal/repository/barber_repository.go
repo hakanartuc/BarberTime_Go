@@ -12,7 +12,6 @@ type BarberRepository interface {
 	GetByID(id uint) (*models.Barber, error)
 	GetByUserID(userID uint) (*models.Barber, error)
 	GetNearby(latitude, longitude float64, maxDistanceKM *float64, page, limit int) ([]models.Barber, int64, error)
-	SearchByName(query string, page, limit int) ([]models.Barber, int64, error)
 	Update(barber *models.Barber) error
 	Delete(id uint) error
 	GetByShopID(shopID uint) ([]models.Barber, error)
@@ -102,27 +101,4 @@ func (r *barberRepository) GetByShopID(shopID uint) ([]models.Barber, error) {
 		Preload("Shops").
 		Find(&barbers).Error
 	return barbers, err
-}
-
-// SearchByName searches barbers by name (case-insensitive LIKE query)
-func (r *barberRepository) SearchByName(query string, page, limit int) ([]models.Barber, int64, error) {
-	var barbers []models.Barber
-	var total int64
-
-	offset := (page - 1) * limit
-
-	// Sadece onaylı shop'lara bağlı barber'ları getir
-	baseQuery := r.db.Model(&models.Barber{}).
-		Joins("JOIN barber_shops ON barbers.id = barber_shops.barber_id").
-		Joins("JOIN shops ON barber_shops.shop_id = shops.id").
-		Where("shops.status = ? AND barber_shops.status = ?", models.ShopStatusConfirmed, models.BarberShopStatusApproved).
-		Where("LOWER(barbers.name) LIKE LOWER(?)", "%"+query+"%").
-		Select("DISTINCT barbers.*")
-
-	if err := baseQuery.Count(&total).Error; err != nil {
-		return nil, 0, err
-	}
-
-	err := baseQuery.Offset(offset).Limit(limit).Preload("Shops").Find(&barbers).Error
-	return barbers, total, err
 }

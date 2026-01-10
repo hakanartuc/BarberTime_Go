@@ -22,9 +22,8 @@ type SearchService interface {
 }
 
 type SearchResults struct {
-	Barbers    []models.Barber `json:"barbers,omitempty"`
-	Shops      []models.Shop   `json:"shops,omitempty"`
-	TotalCount int64           `json:"-"` // Internal use for pagination
+	Barbers []models.Barber `json:"barbers,omitempty"`
+	Shops   []models.Shop   `json:"shops,omitempty"`
 }
 
 type searchService struct {
@@ -54,8 +53,9 @@ func (s *searchService) Search(query string, searchType string, latitude, longit
 	// Cache'den kontrol et
 	var cachedResults SearchResults
 	if err := redis.Get(cacheKey, &cachedResults); err == nil {
-		log.Printf("[Search] Cache hit for key: %s", cacheKey)
-		pagination := utils.NewPagination(page, limit, cachedResults.TotalCount)
+		// Cache'den bulundu, pagination hesapla
+		total := int64(len(cachedResults.Barbers) + len(cachedResults.Shops))
+		pagination := utils.NewPagination(page, limit, total)
 		return cachedResults, pagination, nil
 	}
 
@@ -63,37 +63,19 @@ func (s *searchService) Search(query string, searchType string, latitude, longit
 	if elasticsearch.Client != nil {
 		esResults, err := s.searchWithElasticsearch(query, searchType, latitude, longitude, serviceName, maxDistanceKM, page, limit)
 		if err == nil {
-			log.Printf("[Search] Elasticsearch search successful - barbers: %d, shops: %d, total: %d",
-				len(esResults.Barbers), len(esResults.Shops), esResults.TotalCount)
 			// Cache'e kaydet (5 dakika)
 			if redis.Client != nil {
 				redis.Set(cacheKey, esResults, 5*time.Minute)
 			}
-			pagination := utils.NewPagination(page, limit, esResults.TotalCount)
+			total := int64(len(esResults.Barbers) + len(esResults.Shops))
+			pagination := utils.NewPagination(page, limit, total)
 			return esResults, pagination, nil
 		}
 		// Elasticsearch hatası varsa fallback'e geç
-		log.Printf("[Search] Elasticsearch search failed, falling back to database: %v", err)
-	} else {
-		log.Printf("[Search] Elasticsearch not available, using database search")
 	}
 
 	// Fallback: Database'den arama
-	dbResults, pagination, err := s.searchWithDatabase(query, searchType, latitude, longitude, serviceName, maxDistanceKM, page, limit)
-	if err != nil {
-		log.Printf("[Search] Database search failed: %v", err)
-		return SearchResults{}, utils.Pagination{}, err
-	}
-
-	log.Printf("[Search] Database search successful - barbers: %d, shops: %d, total: %d",
-		len(dbResults.Barbers), len(dbResults.Shops), dbResults.TotalCount)
-
-	// Cache'e kaydet (5 dakika)
-	if redis.Client != nil {
-		redis.Set(cacheKey, dbResults, 5*time.Minute)
-	}
-
-	return dbResults, pagination, nil
+	return s.searchWithDatabase(query, searchType, latitude, longitude, serviceName, maxDistanceKM, page, limit)
 }
 
 func (s *searchService) searchWithElasticsearch(query string, searchType string, latitude, longitude *float64, serviceName *string, maxDistanceKM *float64, page, limit int) (SearchResults, error) {
@@ -237,19 +219,14 @@ func (s *searchService) searchWithElasticsearch(query string, searchType string,
 		}
 	}
 
-	var totalCount int64
-
 	// Search barbers
 	if searchType == "barber" || searchType == "all" {
 		indexName := "barbertime_barbers"
 
 		barberResults, err := elasticsearch.Search(indexName, esQuery, from, limit)
 		if err == nil {
-			barbers, barberTotal := s.parseBarberResults(barberResults)
+			barbers := s.parseBarberResults(barberResults)
 			results.Barbers = barbers
-			totalCount += barberTotal
-		} else {
-			log.Printf("[Search] Elasticsearch barber search error: %v", err)
 		}
 	}
 
@@ -259,37 +236,25 @@ func (s *searchService) searchWithElasticsearch(query string, searchType string,
 
 		shopResults, err := elasticsearch.Search(indexName, esQuery, from, limit)
 		if err == nil {
-			shops, shopTotal := s.parseShopResults(shopResults)
+			shops := s.parseShopResults(shopResults)
 			results.Shops = shops
-			totalCount += shopTotal
-		} else {
-			log.Printf("[Search] Elasticsearch shop search error: %v", err)
 		}
 	}
 
-	results.TotalCount = totalCount
 	return results, nil
 }
 
-func (s *searchService) parseBarberResults(esResult map[string]interface{}) ([]models.Barber, int64) {
+func (s *searchService) parseBarberResults(esResult map[string]interface{}) []models.Barber {
 	var barbers []models.Barber
-	var totalCount int64
 
 	hits, ok := esResult["hits"].(map[string]interface{})
 	if !ok {
-		return barbers, 0
-	}
-
-	// Parse total count from Elasticsearch response
-	if total, ok := hits["total"].(map[string]interface{}); ok {
-		if value, ok := total["value"].(float64); ok {
-			totalCount = int64(value)
-		}
+		return barbers
 	}
 
 	hitsList, ok := hits["hits"].([]interface{})
 	if !ok {
-		return barbers, totalCount
+		return barbers
 	}
 
 	for _, hit := range hitsList {
@@ -346,31 +311,25 @@ func (s *searchService) parseBarberResults(esResult map[string]interface{}) ([]m
 			barber.Avatar = &avatar
 		}
 
+		// Services bilgisi artık shop'lardan gelecek, barber'ın direkt servisleri yok
+
 		barbers = append(barbers, barber)
 	}
 
-	return barbers, totalCount
+	return barbers
 }
 
-func (s *searchService) parseShopResults(esResult map[string]interface{}) ([]models.Shop, int64) {
+func (s *searchService) parseShopResults(esResult map[string]interface{}) []models.Shop {
 	var shops []models.Shop
-	var totalCount int64
 
 	hits, ok := esResult["hits"].(map[string]interface{})
 	if !ok {
-		return shops, 0
-	}
-
-	// Parse total count from Elasticsearch response
-	if total, ok := hits["total"].(map[string]interface{}); ok {
-		if value, ok := total["value"].(float64); ok {
-			totalCount = int64(value)
-		}
+		return shops
 	}
 
 	hitsList, ok := hits["hits"].([]interface{})
 	if !ok {
-		return shops, totalCount
+		return shops
 	}
 
 	for _, hit := range hitsList {
@@ -445,149 +404,142 @@ func (s *searchService) parseShopResults(esResult map[string]interface{}) ([]mod
 		// Status (confirmed olarak işaretle, çünkü sadece confirmed shop'lar indexleniyor)
 		shop.Status = models.ShopStatusConfirmed
 
+		// Services (nested objects) - Shop model'inde Services field'ı yok, bu yüzden parse etmiyoruz
+		// Eğer shop'un services'ini döndürmek istersek, Shop model'ine Services field'ı eklememiz gerekir
+		// Şimdilik sadece search'te kullanılıyor, sonuçlarda döndürülmüyor
+
 		shops = append(shops, shop)
 	}
 
-	return shops, totalCount
+	return shops
 }
 
 func (s *searchService) searchWithDatabase(query string, searchType string, latitude, longitude *float64, serviceName *string, maxDistanceKM *float64, page, limit int) (SearchResults, utils.Pagination, error) {
 	results := SearchResults{}
-	var totalCount int64
 
-	// Konum bilgisi varsa nearby araması yap, yoksa isim bazlı arama yap
-	hasLocation := latitude != nil && longitude != nil
-
-	if searchType == "barber" || searchType == "all" {
-		var barbers []models.Barber
-		var barberTotal int64
-		var err error
-
-		if hasLocation {
-			barbers, barberTotal, err = s.barberRepo.GetNearby(*latitude, *longitude, maxDistanceKM, page, limit)
-			if err != nil {
-				log.Printf("[Search] Database barber nearby search error: %v", err)
-			}
-		} else if query != "" {
-			// Konum yoksa isim bazlı arama yap
-			barbers, barberTotal, err = s.barberRepo.SearchByName(query, page, limit)
-			if err != nil {
-				log.Printf("[Search] Database barber name search error: %v", err)
-			}
-		}
-
-		// İsim ve servis filtreleme (nearby aramasında)
-		if hasLocation && (query != "" || (serviceName != nil && *serviceName != "")) {
+	// Eğer konum bilgisi varsa, nearby araması yap
+	if latitude != nil && longitude != nil {
+		if searchType == "barber" || searchType == "all" {
+			barbers, _, _ := s.barberRepo.GetNearby(*latitude, *longitude, maxDistanceKM, page, limit)
+			// İsim bazlı filtreleme (basit contains - Elasticsearch kullanılamazsa)
 			var filteredBarbers []models.Barber
 			for _, barber := range barbers {
-				// Text query filtresi
+				// Text query filtresi (basit contains)
 				if query != "" && !strings.Contains(strings.ToLower(barber.Name), query) {
 					continue
 				}
-				// Service filtresi
+				// Service filtresi (basit contains - Elasticsearch kullanılamazsa)
 				if serviceName != nil && *serviceName != "" {
-					if !s.barberHasService(barber, *serviceName) {
+					serviceNameLower := strings.ToLower(*serviceName)
+					hasService := false
+					for _, shop := range barber.Shops {
+						shopServices, err := s.shopServiceRepo.GetByShopID(shop.ID)
+						if err == nil {
+							for _, shopService := range shopServices {
+								// Basit contains kontrolü (Elasticsearch olmadığında)
+								shopServiceNameLower := strings.ToLower(shopService.Service.Name)
+								if strings.Contains(shopServiceNameLower, serviceNameLower) ||
+									strings.Contains(serviceNameLower, shopServiceNameLower) {
+									hasService = true
+									break
+								}
+							}
+						}
+						if hasService {
+							break
+						}
+					}
+					if !hasService {
 						continue
 					}
 				}
 				filteredBarbers = append(filteredBarbers, barber)
 			}
 			results.Barbers = filteredBarbers
-			// Filtreleme sonrası gerçek total bilinmiyor, filtrelenmiş sayıyı kullan
-			barberTotal = int64(len(filteredBarbers))
-		} else {
-			results.Barbers = barbers
-		}
-		totalCount += barberTotal
-	}
-
-	if searchType == "shop" || searchType == "all" {
-		var shops []models.Shop
-		var shopTotal int64
-		var err error
-
-		if hasLocation {
-			shops, shopTotal, err = s.shopRepo.GetNearby(*latitude, *longitude, maxDistanceKM, page, limit)
-			if err != nil {
-				log.Printf("[Search] Database shop nearby search error: %v", err)
-			}
-		} else if query != "" {
-			// Konum yoksa isim bazlı arama yap
-			shops, shopTotal, err = s.shopRepo.SearchByName(query, page, limit)
-			if err != nil {
-				log.Printf("[Search] Database shop name search error: %v", err)
-			}
 		}
 
-		// İsim ve servis filtreleme (nearby aramasında)
-		if hasLocation && (query != "" || (serviceName != nil && *serviceName != "")) {
+		if searchType == "shop" || searchType == "all" {
+			shops, _, _ := s.shopRepo.GetNearby(*latitude, *longitude, maxDistanceKM, page, limit)
+			// İsim bazlı filtreleme (basit contains - Elasticsearch kullanılamazsa)
 			var filteredShops []models.Shop
 			for _, shop := range shops {
-				// Text query filtresi
+				// Text query filtresi (basit contains)
 				if query != "" && !strings.Contains(strings.ToLower(shop.Name), query) {
 					continue
 				}
-				// Service filtresi
+				// Service filtresi (basit contains - Elasticsearch kullanılamazsa)
 				if serviceName != nil && *serviceName != "" {
-					if !s.shopHasService(shop.ID, *serviceName) {
+					serviceNameLower := strings.ToLower(*serviceName)
+					shopServices, err := s.shopServiceRepo.GetByShopID(shop.ID)
+					if err != nil {
+						continue
+					}
+					hasService := false
+					for _, shopService := range shopServices {
+						// Basit contains kontrolü (Elasticsearch olmadığında)
+						shopServiceNameLower := strings.ToLower(shopService.Service.Name)
+						if strings.Contains(shopServiceNameLower, serviceNameLower) ||
+							strings.Contains(serviceNameLower, shopServiceNameLower) {
+							hasService = true
+							break
+						}
+					}
+					if !hasService {
 						continue
 					}
 				}
 				filteredShops = append(filteredShops, shop)
 			}
 			results.Shops = filteredShops
-			// Filtreleme sonrası gerçek total bilinmiyor, filtrelenmiş sayıyı kullan
-			shopTotal = int64(len(filteredShops))
-		} else {
-			results.Shops = shops
 		}
-		totalCount += shopTotal
+	} else {
+		// Konum bilgisi yoksa, Elasticsearch kullanılması önerilir
+		// Database fallback bu durumda sınırlıdır
+		// Sadece boş sonuç döndürüyoruz (Elasticsearch olmadığında konum bilgisi şart)
+		log.Printf("Warning: Database fallback without location - Elasticsearch recommended")
 	}
 
-	// Eğer ne konum ne de query yoksa uyarı ver
-	if !hasLocation && query == "" {
-		log.Printf("[Search] Warning: Database search without location or query - returning empty results")
-	}
-
-	results.TotalCount = totalCount
-	pagination := utils.NewPagination(page, limit, totalCount)
+	// Toplam sayıyı hesapla
+	total := int64(len(results.Barbers) + len(results.Shops))
+	pagination := utils.NewPagination(page, limit, total)
 
 	return results, pagination, nil
 }
 
-// barberHasService checks if a barber has a specific service
-func (s *searchService) barberHasService(barber models.Barber, serviceName string) bool {
-	serviceNameLower := strings.ToLower(serviceName)
-	for _, shop := range barber.Shops {
-		shopServices, err := s.shopServiceRepo.GetByShopID(shop.ID)
-		if err == nil {
-			for _, shopService := range shopServices {
-				shopServiceNameLower := strings.ToLower(shopService.Service.Name)
-				if strings.Contains(shopServiceNameLower, serviceNameLower) ||
-					strings.Contains(serviceNameLower, shopServiceNameLower) {
-					return true
-				}
-			}
-		}
+// fuzzyMatch basit bir fuzzy matching algoritması (Levenshtein distance benzeri)
+// İki string arasında benzerlik kontrolü yapar
+func (s *searchService) fuzzyMatch(str1, str2 string) bool {
+	// Eğer biri diğerinin substring'i ise true döndür
+	if strings.Contains(str1, str2) || strings.Contains(str2, str1) {
+		return true
 	}
-	return false
-}
 
-// shopHasService checks if a shop has a specific service
-func (s *searchService) shopHasService(shopID uint, serviceName string) bool {
-	serviceNameLower := strings.ToLower(serviceName)
-	shopServices, err := s.shopServiceRepo.GetByShopID(shopID)
-	if err != nil {
+	// Basit karakter benzerliği kontrolü (en az %70 benzerlik)
+	len1 := len(str1)
+	len2 := len(str2)
+	if len1 == 0 || len2 == 0 {
 		return false
 	}
-	for _, shopService := range shopServices {
-		shopServiceNameLower := strings.ToLower(shopService.Service.Name)
-		if strings.Contains(shopServiceNameLower, serviceNameLower) ||
-			strings.Contains(serviceNameLower, shopServiceNameLower) {
-			return true
+
+	// Kısa string'i uzun string ile karşılaştır
+	shorter := str1
+	longer := str2
+	if len1 > len2 {
+		shorter = str2
+		longer = str1
+	}
+
+	// Ortak karakter sayısını hesapla
+	commonChars := 0
+	for _, char := range shorter {
+		if strings.ContainsRune(longer, char) {
+			commonChars++
 		}
 	}
-	return false
+
+	// Benzerlik oranı hesapla
+	similarity := float64(commonChars) / float64(len(shorter))
+	return similarity >= 0.7
 }
 
 func (s *searchService) IndexBarber(barber *models.Barber) error {
