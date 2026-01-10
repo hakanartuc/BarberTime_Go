@@ -62,6 +62,7 @@ type UpdateBarberProfileRequest struct {
 	Name       *string  `json:"name"`
 	Bio        *string  `json:"bio"`
 	Experience *int     `json:"experience"`
+	Username   *string  `json:"username"`
 	Latitude   *float64 `json:"latitude"`
 	Longitude  *float64 `json:"longitude"`
 }
@@ -79,6 +80,7 @@ func (h *BarberProfileHandler) UpdateBarberProfile(c *gin.Context) {
 		req.Name,
 		req.Bio,
 		req.Experience,
+		req.Username,
 	)
 	if err != nil {
 		utils.BadRequest(c, err.Error())

@@ -106,6 +106,7 @@ func (s *searchService) searchWithElasticsearch(query string, searchType string,
 				"query": query,
 				"fields": []string{
 					"name^3",                   // En yüksek öncelik
+					"username^3",               // Username ile arama (barber için)
 					"description^2",            // İkinci öncelik
 					"bio^2",                    // Barber için
 					"services.name^2",          // Servis isimleri (nested)
@@ -281,6 +282,11 @@ func (s *searchService) parseBarberResults(esResult map[string]interface{}) []mo
 			barber.UserID = uint(userIdFloat)
 		}
 
+		// Username
+		if username, ok := source["username"].(string); ok {
+			barber.Username = username
+		}
+
 		// Name
 		if name, ok := source["name"].(string); ok {
 			barber.Name = name
@@ -424,8 +430,8 @@ func (s *searchService) searchWithDatabase(query string, searchType string, lati
 			// İsim bazlı filtreleme (basit contains - Elasticsearch kullanılamazsa)
 			var filteredBarbers []models.Barber
 			for _, barber := range barbers {
-				// Text query filtresi (basit contains)
-				if query != "" && !strings.Contains(strings.ToLower(barber.Name), query) {
+				// Text query filtresi (basit contains) - name veya username ile eşleşme
+				if query != "" && !strings.Contains(strings.ToLower(barber.Name), query) && !strings.Contains(strings.ToLower(barber.Username), query) {
 					continue
 				}
 				// Service filtresi (basit contains - Elasticsearch kullanılamazsa)
@@ -559,6 +565,15 @@ func (s *searchService) IndexBarber(barber *models.Barber) error {
 				"userId": map[string]interface{}{
 					"type": "long",
 				},
+				"username": map[string]interface{}{
+					"type":     "text",
+					"analyzer": "standard",
+					"fields": map[string]interface{}{
+						"keyword": map[string]interface{}{
+							"type": "keyword",
+						},
+					},
+				},
 				"name": map[string]interface{}{
 					"type":     "text",
 					"analyzer": "standard",
@@ -632,6 +647,7 @@ func (s *searchService) IndexBarber(barber *models.Barber) error {
 	doc := map[string]interface{}{
 		"id":         barber.ID,
 		"userId":     barber.UserID,
+		"username":   barber.Username,
 		"name":       barber.Name,
 		"bio":        barber.Bio,
 		"experience": barber.Experience,

@@ -11,6 +11,8 @@ type BarberRepository interface {
 	Create(barber *models.Barber) error
 	GetByID(id uint) (*models.Barber, error)
 	GetByUserID(userID uint) (*models.Barber, error)
+	GetByUsername(username string) (*models.Barber, error)
+	ExistsByUsername(username string, excludeBarberID uint) (bool, error)
 	GetNearby(latitude, longitude float64, maxDistanceKM *float64, page, limit int) ([]models.Barber, int64, error)
 	Update(barber *models.Barber) error
 	Delete(id uint) error
@@ -57,6 +59,34 @@ func (r *barberRepository) GetByUserID(userID uint) (*models.Barber, error) {
 	barber.Avatar = barber.User.Avatar
 
 	return &barber, nil
+}
+
+func (r *barberRepository) GetByUsername(username string) (*models.Barber, error) {
+	var barber models.Barber
+	err := r.db.Where("username = ?", username).
+		Preload("User").Preload("Shops").Preload("Reviews").
+		First(&barber).Error
+	if err != nil {
+		return nil, err
+	}
+
+	// Avatar'ı User'dan al
+	barber.Avatar = barber.User.Avatar
+
+	return &barber, nil
+}
+
+func (r *barberRepository) ExistsByUsername(username string, excludeBarberID uint) (bool, error) {
+	var count int64
+	query := r.db.Model(&models.Barber{}).Where("username = ?", username)
+	if excludeBarberID > 0 {
+		query = query.Where("id != ?", excludeBarberID)
+	}
+	err := query.Count(&count).Error
+	if err != nil {
+		return false, err
+	}
+	return count > 0, nil
 }
 
 func (r *barberRepository) GetNearby(latitude, longitude float64, maxDistanceKM *float64, page, limit int) ([]models.Barber, int64, error) {

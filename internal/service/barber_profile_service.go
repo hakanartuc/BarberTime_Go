@@ -5,13 +5,21 @@ import (
 	"barbertime_go/internal/repository"
 	"errors"
 	"fmt"
+	"math/rand"
+	"regexp"
+	"strings"
 	"time"
+	"unicode"
+
+	"golang.org/x/text/runes"
+	"golang.org/x/text/transform"
+	"golang.org/x/text/unicode/norm"
 )
 
 type BarberProfileService interface {
 	RegisterAsBarber(userID uint, name string, bio string, experience int) (*models.Barber, error)
 	GetBarberProfile(userID uint) (*models.Barber, error)
-	UpdateBarberProfile(userID uint, name *string, bio *string, experience *int) (*models.Barber, error)
+	UpdateBarberProfile(userID uint, name *string, bio *string, experience *int, username *string) (*models.Barber, error)
 }
 
 type barberProfileService struct {
@@ -43,8 +51,12 @@ func (s *barberProfileService) RegisterAsBarber(userID uint, name string, bio st
 		return nil, errors.New("user is already registered as barber")
 	}
 
+	// Username oluştur (isim + random sayı)
+	username := s.generateUsername(name)
+
 	barber := &models.Barber{
 		UserID:     userID,
+		Username:   username,
 		Name:       name,
 		Bio:        bio,
 		Experience: experience,
@@ -98,7 +110,7 @@ func (s *barberProfileService) GetBarberProfile(userID uint) (*models.Barber, er
 	return barber, nil
 }
 
-func (s *barberProfileService) UpdateBarberProfile(userID uint, name *string, bio *string, experience *int) (*models.Barber, error) {
+func (s *barberProfileService) UpdateBarberProfile(userID uint, name *string, bio *string, experience *int, username *string) (*models.Barber, error) {
 	barber, err := s.barberRepo.GetByUserID(userID)
 	if err != nil {
 		return nil, errors.New("barber profile not found")
@@ -112,6 +124,17 @@ func (s *barberProfileService) UpdateBarberProfile(userID uint, name *string, bi
 	}
 	if experience != nil {
 		barber.Experience = *experience
+	}
+	if username != nil {
+		// Username unique kontrolü (kendi ID'si hariç)
+		exists, err := s.barberRepo.ExistsByUsername(*username, barber.ID)
+		if err != nil {
+			return nil, err
+		}
+		if exists {
+			return nil, errors.New("username already taken")
+		}
+		barber.Username = *username
 	}
 
 	// 1. DB'yi güncelle
@@ -132,4 +155,66 @@ func (s *barberProfileService) UpdateBarberProfile(userID uint, name *string, bi
 	s.messageService.PublishBarberUpdated(updatedBarber.ID)
 
 	return updatedBarber, nil
+}
+
+// generateUsername isimden username oluşturur (isim + random sayı)
+func (s *barberProfileService) generateUsername(name string) string {
+	// Türkçe karakterleri ASCII'ye çevir
+	baseUsername := s.normalizeToASCII(name)
+
+	// Küçük harfe çevir ve boşlukları alt çizgiye çevir
+	baseUsername = strings.ToLower(baseUsername)
+	baseUsername = strings.ReplaceAll(baseUsername, " ", "_")
+
+	// Sadece harf, rakam ve alt çizgi bırak
+	reg := regexp.MustCompile("[^a-z0-9_]")
+	baseUsername = reg.ReplaceAllString(baseUsername, "")
+
+	// Birden fazla alt çizgiyi teke indir
+	reg = regexp.MustCompile("_+")
+	baseUsername = reg.ReplaceAllString(baseUsername, "_")
+
+	// Başta ve sonda alt çizgi varsa kaldır
+	baseUsername = strings.Trim(baseUsername, "_")
+
+	// Eğer boş kaldıysa default bir isim ver
+	if baseUsername == "" {
+		baseUsername = "barber"
+	}
+
+	// Random sayı ekle (1000-9999 arası)
+	randomNum := rand.Intn(9000) + 1000
+	username := fmt.Sprintf("%s%d", baseUsername, randomNum)
+
+	// Unique olana kadar dene (yeni kayıt olduğu için excludeID = 0)
+	for {
+		exists, _ := s.barberRepo.ExistsByUsername(username, 0)
+		if !exists {
+			break
+		}
+		randomNum = rand.Intn(9000) + 1000
+		username = fmt.Sprintf("%s%d", baseUsername, randomNum)
+	}
+
+	return username
+}
+
+// normalizeToASCII Türkçe karakterleri ASCII karşılıklarına çevirir
+func (s *barberProfileService) normalizeToASCII(str string) string {
+	// Türkçe karakter mapping
+	replacer := strings.NewReplacer(
+		"ı", "i", "İ", "I",
+		"ğ", "g", "Ğ", "G",
+		"ü", "u", "Ü", "U",
+		"ş", "s", "Ş", "S",
+		"ö", "o", "Ö", "O",
+		"ç", "c", "Ç", "C",
+	)
+	str = replacer.Replace(str)
+
+	// Unicode normalization ile diğer aksanlı karakterleri temizle
+	t := transform.Chain(norm.NFD, runes.Remove(runes.In(unicode.Mn)), norm.NFC)
+	result, _, _ := transform.String(t, str)
+
+	return result
 }
