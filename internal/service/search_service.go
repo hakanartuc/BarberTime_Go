@@ -91,8 +91,8 @@ func (s *searchService) searchWithElasticsearch(query string, searchType string,
 		distanceStr = fmt.Sprintf("%.1fkm", *maxDistanceKM)
 	}
 
-	// Barber için query oluştur
-	buildQuery := func(fields []string) map[string]interface{} {
+	// Query builder - includeServiceFilter: sadece shop aramasında true olmalı
+	buildQuery := func(fields []string, includeServiceFilter bool) map[string]interface{} {
 		esQuery := map[string]interface{}{
 			"from":  from,
 			"size":  limit,
@@ -116,8 +116,8 @@ func (s *searchService) searchWithElasticsearch(query string, searchType string,
 			})
 		}
 
-		// Service filter (nested query with fuzzy search)
-		if serviceName != nil && *serviceName != "" {
+		// Service filter (nested query with fuzzy search) - sadece shop aramasında kullanılır
+		if includeServiceFilter && serviceName != nil && *serviceName != "" {
 			serviceNameLower := strings.ToLower(*serviceName)
 			serviceFilter := map[string]interface{}{
 				"nested": map[string]interface{}{
@@ -229,9 +229,9 @@ func (s *searchService) searchWithElasticsearch(query string, searchType string,
 		"email^1",
 	}
 
-	// Search barbers
+	// Search barbers (service filter kullanılmaz - barber'da shopServices yok)
 	if searchType == "barber" || searchType == "all" {
-		barberQuery := buildQuery(barberFields)
+		barberQuery := buildQuery(barberFields, false)
 		barberResults, err := elasticsearch.Search("barbertime_barbers", barberQuery, from, limit)
 		if err != nil {
 			log.Printf("Elasticsearch barber search error: %v", err)
@@ -242,9 +242,9 @@ func (s *searchService) searchWithElasticsearch(query string, searchType string,
 		}
 	}
 
-	// Search shops
+	// Search shops (service filter kullanılır)
 	if searchType == "shop" || searchType == "all" {
-		shopQuery := buildQuery(shopFields)
+		shopQuery := buildQuery(shopFields, true)
 		shopResults, err := elasticsearch.Search("barbertime_shops", shopQuery, from, limit)
 		if err != nil {
 			log.Printf("Elasticsearch shop search error: %v", err)
