@@ -101,6 +101,12 @@ func (s *shopProfileService) CreateShop(userID uint, name string, description st
 		return nil, err
 	}
 
+	// Owner'ları al
+	owners, err := s.barberShopRepo.GetOwners(shop.ID)
+	if err == nil {
+		createdShop.Owners = owners
+	}
+
 	// 2. Cache'e kaydet
 	cacheKey := fmt.Sprintf("shop:%d", createdShop.ID)
 	s.cacheService.Set(cacheKey, createdShop, 1*time.Hour)
@@ -189,6 +195,12 @@ func (s *shopProfileService) UpdateShopProfile(shopID, userID uint, name *string
 	updatedShop, err := s.shopRepo.GetByID(shopID)
 	if err != nil {
 		return nil, err
+	}
+
+	// Owner'ları al
+	owners, err := s.barberShopRepo.GetOwners(shopID)
+	if err == nil {
+		updatedShop.Owners = owners
 	}
 
 	// 2. Cache'i güncelle

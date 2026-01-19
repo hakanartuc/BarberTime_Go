@@ -101,6 +101,7 @@ func (r *barberShopRepository) IsOwner(shopID, userID uint) (bool, error) {
 func (r *barberShopRepository) GetOwners(shopID uint) ([]models.User, error) {
 	var users []models.User
 	err := r.db.Model(&models.User{}).
+		Select("users.id, users.phone_number, users.avatar, users.is_admin, users.is_phone_confirmed, users.created_at, barbers.name as name").
 		Joins("JOIN barbers ON users.id = barbers.user_id").
 		Joins("JOIN barber_shops ON barbers.id = barber_shops.barber_id").
 		Where("barber_shops.shop_id = ? AND barber_shops.is_owner = ?", shopID, true).

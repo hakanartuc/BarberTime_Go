@@ -5,7 +5,6 @@ import (
 	"barbertime_go/internal/repository"
 	"errors"
 	"fmt"
-	"time"
 )
 
 type AdminService interface {
@@ -58,17 +57,12 @@ func (s *adminService) ApproveShop(shopID uint) error {
 		return err
 	}
 
-	updatedShop, err := s.shopRepo.GetByID(shopID)
-	if err != nil {
-		return err
-	}
-
-	// 2. Cache'i güncelle
-	cacheKey := fmt.Sprintf("shop:%d", updatedShop.ID)
-	s.cacheService.Set(cacheKey, updatedShop, 1*time.Hour)
+	// 2. Cache'i invalidate et (owner bilgisi ile birlikte yeniden yazılması için)
+	cacheKey := fmt.Sprintf("shop:%d", shopID)
+	s.cacheService.Delete(cacheKey)
 
 	// 3. RabbitMQ ile event mesajı gönder
-	s.messageService.PublishShopUpdated(updatedShop.ID)
+	s.messageService.PublishShopUpdated(shopID)
 
 	return nil
 }
