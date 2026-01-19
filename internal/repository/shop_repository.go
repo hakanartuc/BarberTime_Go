@@ -75,7 +75,7 @@ func (r *shopRepository) GetPendingShops(page, limit int) ([]models.Shop, int64,
 
 	offset := (page - 1) * limit
 
-	query := r.db.Where("status = ?", models.ShopStatusPending)
+	query := r.db.Model(&models.Shop{}).Where("status = ?", models.ShopStatusPending)
 
 	if err := query.Count(&total).Error; err != nil {
 		return nil, 0, err

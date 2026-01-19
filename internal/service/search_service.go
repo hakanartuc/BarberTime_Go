@@ -230,9 +230,12 @@ func (s *searchService) searchWithElasticsearch(query string, searchType string,
 	if searchType == "barber" || searchType == "all" {
 		barberQuery := buildQuery(barberFields)
 		barberResults, err := elasticsearch.Search("barbertime_barbers", barberQuery, from, limit)
-		if err == nil {
+		if err != nil {
+			log.Printf("Elasticsearch barber search error: %v", err)
+		} else {
 			barbers := s.parseBarberResults(barberResults)
 			results.Barbers = barbers
+			log.Printf("Barber search returned %d results", len(barbers))
 		}
 	}
 
@@ -240,9 +243,12 @@ func (s *searchService) searchWithElasticsearch(query string, searchType string,
 	if searchType == "shop" || searchType == "all" {
 		shopQuery := buildQuery(shopFields)
 		shopResults, err := elasticsearch.Search("barbertime_shops", shopQuery, from, limit)
-		if err == nil {
+		if err != nil {
+			log.Printf("Elasticsearch shop search error: %v", err)
+		} else {
 			shops := s.parseShopResults(shopResults)
 			results.Shops = shops
+			log.Printf("Shop search returned %d results", len(shops))
 		}
 	}
 
