@@ -121,13 +121,13 @@ func (s *searchService) searchWithElasticsearch(query string, searchType string,
 			serviceNameLower := strings.ToLower(*serviceName)
 			serviceFilter := map[string]interface{}{
 				"nested": map[string]interface{}{
-					"path": "services",
+					"path": "shopServices",
 					"query": map[string]interface{}{
 						"bool": map[string]interface{}{
 							"should": []interface{}{
 								map[string]interface{}{
 									"match": map[string]interface{}{
-										"services.name": map[string]interface{}{
+										"shopServices.serviceName": map[string]interface{}{
 											"query": serviceNameLower,
 											"boost": 3.0,
 										},
@@ -135,7 +135,7 @@ func (s *searchService) searchWithElasticsearch(query string, searchType string,
 								},
 								map[string]interface{}{
 									"match": map[string]interface{}{
-										"services.name": map[string]interface{}{
+										"shopServices.serviceName": map[string]interface{}{
 											"query":     serviceNameLower,
 											"fuzziness": "AUTO",
 											"boost":     1.0,
@@ -144,7 +144,7 @@ func (s *searchService) searchWithElasticsearch(query string, searchType string,
 								},
 								map[string]interface{}{
 									"prefix": map[string]interface{}{
-										"services.name": map[string]interface{}{
+										"shopServices.serviceName": map[string]interface{}{
 											"value": serviceNameLower,
 											"boost": 2.0,
 										},
