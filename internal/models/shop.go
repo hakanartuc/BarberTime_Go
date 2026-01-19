@@ -18,6 +18,7 @@ type Shop struct {
 	ID           uint           `gorm:"primaryKey" json:"id"`
 	Name         string         `gorm:"not null" json:"name"`
 	Description  string         `json:"description"`
+	Banner       *string        `json:"banner"`
 	PhoneNumber  string         `json:"phoneNumber"`
 	Email        string         `json:"email"`
 	Website      string         `json:"website"`

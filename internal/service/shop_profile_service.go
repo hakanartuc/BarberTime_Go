@@ -11,7 +11,7 @@ import (
 type ShopProfileService interface {
 	CreateShop(userID uint, name string, description string, phoneNumber string, email string, website string, latitude, longitude float64, workingHours, closedDays string) (*models.Shop, error)
 	GetShopProfile(shopID uint) (*models.Shop, error)
-	UpdateShopProfile(shopID, userID uint, name *string, description *string, phoneNumber *string, email *string, website *string, workingHours *string, closedDays *string, latitude, longitude *float64) (*models.Shop, error)
+	UpdateShopProfile(shopID, userID uint, name *string, description *string, banner *string, phoneNumber *string, email *string, website *string, workingHours *string, closedDays *string, latitude, longitude *float64) (*models.Shop, error)
 	AddShopOwner(shopID, ownerUserID, requesterUserID uint) error
 	RemoveShopOwner(shopID, ownerUserID, requesterUserID uint) error
 	GetShopOwners(shopID uint) ([]models.User, error)
@@ -137,7 +137,7 @@ func (s *shopProfileService) GetShopProfile(shopID uint) (*models.Shop, error) {
 	return shop, nil
 }
 
-func (s *shopProfileService) UpdateShopProfile(shopID, userID uint, name *string, description *string, phoneNumber *string, email *string, website *string, workingHours *string, closedDays *string, latitude, longitude *float64) (*models.Shop, error) {
+func (s *shopProfileService) UpdateShopProfile(shopID, userID uint, name *string, description *string, banner *string, phoneNumber *string, email *string, website *string, workingHours *string, closedDays *string, latitude, longitude *float64) (*models.Shop, error) {
 	// Owner kontrolü
 	isOwner, err := s.barberShopRepo.IsOwner(shopID, userID)
 	if err != nil {
@@ -157,6 +157,9 @@ func (s *shopProfileService) UpdateShopProfile(shopID, userID uint, name *string
 	}
 	if description != nil {
 		shop.Description = *description
+	}
+	if banner != nil {
+		shop.Banner = banner
 	}
 	if phoneNumber != nil {
 		shop.PhoneNumber = *phoneNumber

@@ -78,6 +78,7 @@ func (h *ShopProfileHandler) GetShopProfile(c *gin.Context) {
 type UpdateShopProfileRequest struct {
 	Name         *string  `json:"name"`
 	Description  *string  `json:"description"`
+	Banner       *string  `json:"banner"`
 	PhoneNumber  *string  `json:"phoneNumber"`
 	Email        *string  `json:"email"`
 	Website      *string  `json:"website"`
@@ -106,6 +107,7 @@ func (h *ShopProfileHandler) UpdateShopProfile(c *gin.Context) {
 		userID.(uint),
 		req.Name,
 		req.Description,
+		req.Banner,
 		req.PhoneNumber,
 		req.Email,
 		req.Website,
