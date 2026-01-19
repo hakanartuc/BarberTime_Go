@@ -103,7 +103,7 @@ func main() {
 	favoriteService := service.NewFavoriteService(favoriteRepo)
 	serviceService := service.NewServiceService(serviceRepo)
 	shopServiceService := service.NewShopServiceService(shopServiceRepo, serviceRepo)
-	searchService := service.NewSearchService(barberRepo, shopRepo, shopServiceRepo)
+	searchService := service.NewSearchService(barberRepo, shopRepo, shopServiceRepo, barberShopRepo)
 	barberProfileService := service.NewBarberProfileService(barberRepo, userRepo, cacheService, messageService)
 	shopProfileService := service.NewShopProfileService(shopRepo, userRepo, barberRepo, barberShopRepo, shopServiceRepo, serviceRepo, cacheService, messageService)
 	barberShopRequestService := service.NewBarberShopRequestService(barberShopRequestRepo, barberRepo, shopRepo, barberShopRepo, cacheService, messageService)

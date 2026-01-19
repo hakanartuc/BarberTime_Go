@@ -35,9 +35,10 @@ func main() {
 	barberRepo := repository.NewBarberRepository()
 	shopRepo := repository.NewShopRepository()
 	shopServiceRepo := repository.NewShopServiceRepository()
+	barberShopRepo := repository.NewBarberShopRepository()
 
 	// Service'leri oluştur
-	searchService := service.NewSearchService(barberRepo, shopRepo, shopServiceRepo)
+	searchService := service.NewSearchService(barberRepo, shopRepo, shopServiceRepo, barberShopRepo)
 
 	// Queue consumer'ı başlat
 	log.Println("Starting queue consumer...")

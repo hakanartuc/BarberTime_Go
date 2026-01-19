@@ -30,17 +30,20 @@ type searchService struct {
 	barberRepo      repository.BarberRepository
 	shopRepo        repository.ShopRepository
 	shopServiceRepo repository.ShopServiceRepository
+	barberShopRepo  repository.BarberShopRepository
 }
 
 func NewSearchService(
 	barberRepo repository.BarberRepository,
 	shopRepo repository.ShopRepository,
 	shopServiceRepo repository.ShopServiceRepository,
+	barberShopRepo repository.BarberShopRepository,
 ) SearchService {
 	return &searchService{
 		barberRepo:      barberRepo,
 		shopRepo:        shopRepo,
 		shopServiceRepo: shopServiceRepo,
+		barberShopRepo:  barberShopRepo,
 	}
 }
 
@@ -420,9 +423,59 @@ func (s *searchService) parseShopResults(esResult map[string]interface{}) []mode
 		// Status (confirmed olarak işaretle, çünkü sadece confirmed shop'lar indexleniyor)
 		shop.Status = models.ShopStatusConfirmed
 
-		// Services (nested objects) - Shop model'inde Services field'ı yok, bu yüzden parse etmiyoruz
-		// Eğer shop'un services'ini döndürmek istersek, Shop model'ine Services field'ı eklememiz gerekir
-		// Şimdilik sadece search'te kullanılıyor, sonuçlarda döndürülmüyor
+		// Owners bilgilerini Elasticsearch'ten parse et
+		if ownersList, ok := source["owners"].([]interface{}); ok {
+			var owners []models.User
+			for _, ownerItem := range ownersList {
+				if ownerMap, ok := ownerItem.(map[string]interface{}); ok {
+					owner := models.User{}
+					if idFloat, ok := ownerMap["id"].(float64); ok {
+						owner.ID = uint(idFloat)
+					}
+					if name, ok := ownerMap["name"].(string); ok {
+						owner.Name = name
+					}
+					if avatar, ok := ownerMap["avatar"].(string); ok {
+						owner.Avatar = &avatar
+					}
+					owners = append(owners, owner)
+				}
+			}
+			shop.Owners = owners
+		}
+
+		// ShopServices bilgilerini Elasticsearch'ten parse et
+		if servicesList, ok := source["shopServices"].([]interface{}); ok {
+			var shopServices []models.ShopService
+			for _, serviceItem := range servicesList {
+				if serviceMap, ok := serviceItem.(map[string]interface{}); ok {
+					shopService := models.ShopService{}
+					if idFloat, ok := serviceMap["id"].(float64); ok {
+						shopService.ID = uint(idFloat)
+					}
+					if serviceIdFloat, ok := serviceMap["serviceId"].(float64); ok {
+						shopService.ServiceID = uint(serviceIdFloat)
+					}
+					if serviceName, ok := serviceMap["serviceName"].(string); ok {
+						shopService.Service.Name = serviceName
+					}
+					if serviceImage, ok := serviceMap["serviceImage"].(string); ok {
+						shopService.Service.Image = &serviceImage
+					}
+					if desc, ok := serviceMap["description"].(string); ok {
+						shopService.Description = &desc
+					}
+					if price, ok := serviceMap["price"].(float64); ok {
+						shopService.Price = price
+					}
+					if duration, ok := serviceMap["duration"].(float64); ok {
+						shopService.Duration = int(duration)
+					}
+					shopServices = append(shopServices, shopService)
+				}
+			}
+			shop.ShopServices = shopServices
+		}
 
 		shops = append(shops, shop)
 	}
@@ -788,15 +841,35 @@ func (s *searchService) IndexShop(shop *models.Shop) error {
 				"location": map[string]interface{}{
 					"type": "geo_point",
 				},
-				"services": map[string]interface{}{
+				"owners": map[string]interface{}{
 					"type": "nested",
 					"properties": map[string]interface{}{
 						"id": map[string]interface{}{
 							"type": "long",
 						},
 						"name": map[string]interface{}{
+							"type": "keyword",
+						},
+						"avatar": map[string]interface{}{
+							"type": "keyword",
+						},
+					},
+				},
+				"shopServices": map[string]interface{}{
+					"type": "nested",
+					"properties": map[string]interface{}{
+						"id": map[string]interface{}{
+							"type": "long",
+						},
+						"serviceId": map[string]interface{}{
+							"type": "long",
+						},
+						"serviceName": map[string]interface{}{
 							"type":     "text",
 							"analyzer": "standard",
+						},
+						"serviceImage": map[string]interface{}{
+							"type": "keyword",
 						},
 						"description": map[string]interface{}{
 							"type":     "text",
@@ -823,19 +896,42 @@ func (s *searchService) IndexShop(shop *models.Shop) error {
 		log.Printf("Warning: Failed to get services for shop %d: %v", shop.ID, err)
 	}
 
-	// Services listesi (nested objects)
-	var services []map[string]interface{}
+	// ShopServices listesi (nested objects)
+	var shopServicesDoc []map[string]interface{}
 	for _, shopService := range shopServices {
 		serviceDoc := map[string]interface{}{
-			"id":       shopService.ServiceID,
-			"name":     shopService.Service.Name,
-			"price":    shopService.Price,
-			"duration": shopService.Duration,
+			"id":          shopService.ID,
+			"serviceId":   shopService.ServiceID,
+			"serviceName": shopService.Service.Name,
+			"price":       shopService.Price,
+			"duration":    shopService.Duration,
+		}
+		if shopService.Service.Image != nil {
+			serviceDoc["serviceImage"] = *shopService.Service.Image
 		}
 		if shopService.Description != nil {
 			serviceDoc["description"] = *shopService.Description
 		}
-		services = append(services, serviceDoc)
+		shopServicesDoc = append(shopServicesDoc, serviceDoc)
+	}
+
+	// Owner bilgilerini al
+	owners, err := s.barberShopRepo.GetOwners(shop.ID)
+	if err != nil {
+		log.Printf("Warning: Failed to get owners for shop %d: %v", shop.ID, err)
+	}
+
+	// Owners listesi (nested objects)
+	var ownersDoc []map[string]interface{}
+	for _, owner := range owners {
+		ownerDoc := map[string]interface{}{
+			"id":   owner.ID,
+			"name": owner.Name,
+		}
+		if owner.Avatar != nil {
+			ownerDoc["avatar"] = *owner.Avatar
+		}
+		ownersDoc = append(ownersDoc, ownerDoc)
 	}
 
 	// Document oluştur
@@ -850,7 +946,8 @@ func (s *searchService) IndexShop(shop *models.Shop) error {
 			"lat": shop.Location.Latitude,
 			"lon": shop.Location.Longitude,
 		},
-		"services": services,
+		"shopServices": shopServicesDoc,
+		"owners":       ownersDoc,
 	}
 
 	if shop.Location.Address != "" {
