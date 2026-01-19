@@ -29,6 +29,7 @@ type Shop struct {
 	UpdatedAt    time.Time      `json:"-"`
 	DeletedAt    gorm.DeletedAt `gorm:"index" json:"-"`
 
+	Owners         []User              `gorm:"-" json:"owners,omitempty"` // DB'de yok, runtime'da doldurulur
 	Barbers        []Barber            `gorm:"many2many:barber_shops;" json:"barbers,omitempty"`
 	ShopServices   []ShopService       `gorm:"foreignKey:ShopID" json:"shopServices,omitempty"`
 	Reviews        []Review            `gorm:"polymorphic:Target;polymorphicValue:shop" json:"reviews,omitempty"`

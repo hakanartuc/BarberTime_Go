@@ -125,6 +125,12 @@ func (s *shopProfileService) GetShopProfile(shopID uint) (*models.Shop, error) {
 		return nil, errors.New("shop not found")
 	}
 
+	// Owner'ları al
+	owners, err := s.barberShopRepo.GetOwners(shopID)
+	if err == nil {
+		shop.Owners = owners
+	}
+
 	// Cache'e kaydet
 	s.cacheService.Set(cacheKey, shop, 1*time.Hour)
 

@@ -97,7 +97,7 @@ func main() {
 	authService := service.NewAuthService(userRepo, phoneVerificationService)
 	userService := service.NewUserService(userRepo)
 	barberService := service.NewBarberService(barberRepo, appointmentRepo, cacheService)
-	shopService := service.NewShopService(shopRepo, barberRepo, reviewRepo, cacheService)
+	shopService := service.NewShopService(shopRepo, barberRepo, barberShopRepo, reviewRepo, cacheService)
 	appointmentService := service.NewAppointmentService(appointmentRepo, barberRepo, serviceRepo, messageService)
 	reviewService := service.NewReviewService(reviewRepo, messageService)
 	favoriteService := service.NewFavoriteService(favoriteRepo)

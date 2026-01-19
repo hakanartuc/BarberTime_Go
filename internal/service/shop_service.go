@@ -17,23 +17,26 @@ type ShopService interface {
 }
 
 type shopService struct {
-	shopRepo     repository.ShopRepository
-	barberRepo   repository.BarberRepository
-	reviewRepo   repository.ReviewRepository
-	cacheService CacheService
+	shopRepo       repository.ShopRepository
+	barberRepo     repository.BarberRepository
+	barberShopRepo repository.BarberShopRepository
+	reviewRepo     repository.ReviewRepository
+	cacheService   CacheService
 }
 
 func NewShopService(
 	shopRepo repository.ShopRepository,
 	barberRepo repository.BarberRepository,
+	barberShopRepo repository.BarberShopRepository,
 	reviewRepo repository.ReviewRepository,
 	cacheService CacheService,
 ) ShopService {
 	return &shopService{
-		shopRepo:     shopRepo,
-		barberRepo:   barberRepo,
-		reviewRepo:   reviewRepo,
-		cacheService: cacheService,
+		shopRepo:       shopRepo,
+		barberRepo:     barberRepo,
+		barberShopRepo: barberShopRepo,
+		reviewRepo:     reviewRepo,
+		cacheService:   cacheService,
 	}
 }
 
@@ -59,6 +62,12 @@ func (s *shopService) GetShopByID(id uint) (*models.Shop, error) {
 	shopPtr, err := s.shopRepo.GetByID(id)
 	if err != nil {
 		return nil, errors.New("shop not found")
+	}
+
+	// Owner'ları al
+	owners, err := s.barberShopRepo.GetOwners(id)
+	if err == nil {
+		shopPtr.Owners = owners
 	}
 
 	// Cache'e kaydet (1 saat TTL)
