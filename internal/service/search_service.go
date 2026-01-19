@@ -410,6 +410,11 @@ func (s *searchService) parseShopResults(esResult map[string]interface{}) []mode
 			shop.ClosedDays = cd
 		}
 
+		// Banner
+		if banner, ok := source["banner"].(string); ok {
+			shop.Banner = &banner
+		}
+
 		// Location
 		if locMap, ok := source["location"].(map[string]interface{}); ok {
 			if lat, ok := locMap["lat"].(float64); ok {
@@ -833,6 +838,9 @@ func (s *searchService) IndexShop(shop *models.Shop) error {
 				"website": map[string]interface{}{
 					"type": "keyword",
 				},
+				"banner": map[string]interface{}{
+					"type": "keyword",
+				},
 				"workingHours": map[string]interface{}{
 					"type": "text",
 				},
@@ -965,6 +973,10 @@ func (s *searchService) IndexShop(shop *models.Shop) error {
 
 	if shop.ClosedDays != "" {
 		doc["closedDays"] = shop.ClosedDays
+	}
+
+	if shop.Banner != nil && *shop.Banner != "" {
+		doc["banner"] = *shop.Banner
 	}
 
 	if err := elasticsearch.IndexDocument(indexName, strconv.FormatUint(uint64(shop.ID), 10), doc); err != nil {
