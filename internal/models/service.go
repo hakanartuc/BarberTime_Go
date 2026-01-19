@@ -9,7 +9,8 @@ import (
 type Service struct {
 	ID        uint           `gorm:"primaryKey" json:"id"`
 	Name      string         `gorm:"not null;uniqueIndex" json:"name"`
-	CreatedAt time.Time      `json:"createdAt"`
+	Image     *string        `json:"image"`
+	CreatedAt time.Time      `json:"-"`
 	UpdatedAt time.Time      `json:"-"`
 	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
 

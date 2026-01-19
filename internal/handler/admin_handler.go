@@ -74,7 +74,8 @@ func (h *AdminHandler) RejectShop(c *gin.Context) {
 }
 
 type CreateServiceRequest struct {
-	Name string `json:"name" binding:"required"`
+	Name  string  `json:"name" binding:"required"`
+	Image *string `json:"image"`
 }
 
 func (h *AdminHandler) CreateService(c *gin.Context) {
@@ -84,7 +85,7 @@ func (h *AdminHandler) CreateService(c *gin.Context) {
 		return
 	}
 
-	service, err := h.adminService.CreateService(req.Name)
+	service, err := h.adminService.CreateService(req.Name, req.Image)
 	if err != nil {
 		utils.BadRequest(c, err.Error())
 		return
@@ -94,7 +95,8 @@ func (h *AdminHandler) CreateService(c *gin.Context) {
 }
 
 type UpdateServiceRequest struct {
-	Name string `json:"name" binding:"required"`
+	Name  *string `json:"name"`
+	Image *string `json:"image"`
 }
 
 func (h *AdminHandler) UpdateService(c *gin.Context) {
@@ -110,7 +112,7 @@ func (h *AdminHandler) UpdateService(c *gin.Context) {
 		return
 	}
 
-	service, err := h.adminService.UpdateService(uint(id), req.Name)
+	service, err := h.adminService.UpdateService(uint(id), req.Name, req.Image)
 	if err != nil {
 		utils.BadRequest(c, err.Error())
 		return

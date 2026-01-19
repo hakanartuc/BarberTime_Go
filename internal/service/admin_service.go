@@ -12,8 +12,8 @@ type AdminService interface {
 	GetPendingShops(page, limit int) ([]models.Shop, int, error)
 	ApproveShop(shopID uint) error
 	RejectShop(shopID uint) error
-	CreateService(name string) (*models.Service, error)
-	UpdateService(serviceID uint, name string) (*models.Service, error)
+	CreateService(name string, image *string) (*models.Service, error)
+	UpdateService(serviceID uint, name *string, image *string) (*models.Service, error)
 	DeleteService(serviceID uint) error
 }
 
@@ -95,13 +95,14 @@ func (s *adminService) RejectShop(shopID uint) error {
 	return nil
 }
 
-func (s *adminService) CreateService(name string) (*models.Service, error) {
+func (s *adminService) CreateService(name string, image *string) (*models.Service, error) {
 	if name == "" {
 		return nil, errors.New("service name is required")
 	}
 
 	service := &models.Service{
-		Name: name,
+		Name:  name,
+		Image: image,
 	}
 
 	if err := s.serviceRepo.Create(service); err != nil {
@@ -111,17 +112,18 @@ func (s *adminService) CreateService(name string) (*models.Service, error) {
 	return service, nil
 }
 
-func (s *adminService) UpdateService(serviceID uint, name string) (*models.Service, error) {
-	if name == "" {
-		return nil, errors.New("service name is required")
-	}
-
+func (s *adminService) UpdateService(serviceID uint, name *string, image *string) (*models.Service, error) {
 	service, err := s.serviceRepo.GetByID(serviceID)
 	if err != nil {
 		return nil, errors.New("service not found")
 	}
 
-	service.Name = name
+	if name != nil {
+		service.Name = *name
+	}
+	if image != nil {
+		service.Image = image
+	}
 
 	if err := s.serviceRepo.Update(service); err != nil {
 		return nil, fmt.Errorf("failed to update service: %w", err)
