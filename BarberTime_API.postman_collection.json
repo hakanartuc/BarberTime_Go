@@ -794,7 +794,7 @@
 							"host": ["{{baseUrl}}"],
 							"path": ["api", "barber", "register"]
 						},
-						"description": "User'ı barber olarak kaydeder"
+						"description": "User'ı barber olarak kaydeder. Username otomatik oluşturulur (isim + random sayı, örn: mehmet_berber4527)"
 					}
 				},
 				{
@@ -812,7 +812,7 @@
 							"host": ["{{baseUrl}}"],
 							"path": ["api", "barber", "profile"]
 						},
-						"description": "Barber'ın kendi profilini getirir"
+						"description": "Barber'ın kendi profilini getirir (username, avatar ve diğer bilgiler dahil)"
 					}
 				},
 				{
@@ -831,14 +831,14 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"name\": \"Mehmet Berber Güncellendi\",\n    \"bio\": \"15 yıllık deneyimli berber\",\n    \"experience\": 15\n}"
+							"raw": "{\n    \"name\": \"Mehmet Berber Güncellendi\",\n    \"bio\": \"15 yıllık deneyimli berber\",\n    \"experience\": 15,\n    \"username\": \"mehmet_pro\"\n}"
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/barber/profile",
 							"host": ["{{baseUrl}}"],
 							"path": ["api", "barber", "profile"]
 						},
-						"description": "Barber'ın kendi profilini günceller"
+						"description": "Barber'ın kendi profilini günceller. Username değiştirilebilir (unique olmalı)"
 					}
 				},
 				{
@@ -1328,7 +1328,7 @@
 								{
 									"key": "q",
 									"value": "berber",
-									"description": "Arama metni"
+									"description": "Arama metni (isim, username, bio, servis adı vb. ile eşleşir)"
 								},
 								{
 									"key": "type",
@@ -1365,7 +1365,7 @@
 								}
 							]
 						},
-						"description": "Arama yapar. service parametresi ile belirli bir servise sahip barber/shop'ları filtreleyebilir. km parametresi ile maksimum mesafe belirtebilirsiniz."
+						"description": "Arama yapar. Barber'lar isim veya username ile aranabilir (fuzzy matching destekler). service parametresi ile belirli bir servise sahip barber/shop'ları filtreleyebilir. km parametresi ile maksimum mesafe belirtebilirsiniz."
 					}
 				}
 			]

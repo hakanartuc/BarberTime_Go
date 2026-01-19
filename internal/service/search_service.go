@@ -82,149 +82,154 @@ func (s *searchService) searchWithElasticsearch(query string, searchType string,
 	var results SearchResults
 	from := (page - 1) * limit
 
-	// Elasticsearch query oluştur
-	esQuery := map[string]interface{}{
-		"from":  from,
-		"size":  limit,
-		"query": map[string]interface{}{},
-	}
-
 	// Default mesafe 50km
 	distanceStr := "50km"
 	if maxDistanceKM != nil {
 		distanceStr = fmt.Sprintf("%.1fkm", *maxDistanceKM)
 	}
 
-	// Bool query için must, filter, should listeleri
-	var mustQueries []interface{}
-	var filterQueries []interface{}
+	// Barber için query oluştur
+	buildQuery := func(fields []string) map[string]interface{} {
+		esQuery := map[string]interface{}{
+			"from":  from,
+			"size":  limit,
+			"query": map[string]interface{}{},
+		}
 
-	// Text search with fuzzy matching
-	if query != "" {
-		mustQueries = append(mustQueries, map[string]interface{}{
-			"multi_match": map[string]interface{}{
-				"query": query,
-				"fields": []string{
-					"name^3",                   // En yüksek öncelik
-					"username^3",               // Username ile arama (barber için)
-					"description^2",            // İkinci öncelik
-					"bio^2",                    // Barber için
-					"services.name^2",          // Servis isimleri (nested)
-					"services.description^1.5", // Servis açıklamaları (nested)
-					"shopNames^1.5",            // Barber için shop isimleri
-					"shopAddresses^1",          // Barber için shop adresleri
-					"address^1.5",              // Shop için adres
-					"phoneNumber^1",            // Telefon numarası
-					"email^1",                  // Email
+		var mustQueries []interface{}
+		var filterQueries []interface{}
+
+		// Text search with fuzzy matching
+		if query != "" {
+			mustQueries = append(mustQueries, map[string]interface{}{
+				"multi_match": map[string]interface{}{
+					"query":                query,
+					"fields":               fields,
+					"type":                 "best_fields",
+					"fuzziness":            "AUTO",
+					"operator":             "or",
+					"minimum_should_match": "75%",
 				},
-				"type":                 "best_fields",
-				"fuzziness":            "AUTO", // Otomatik fuzzy matching
-				"operator":             "or",   // Herhangi bir kelime eşleşirse
-				"minimum_should_match": "75%",  // En az %75 kelime eşleşmeli
-			},
-		})
-	}
+			})
+		}
 
-	// Service filter (nested query with fuzzy search)
-	if serviceName != nil && *serviceName != "" {
-		serviceNameLower := strings.ToLower(*serviceName)
-		serviceFilter := map[string]interface{}{
-			"nested": map[string]interface{}{
-				"path": "services",
-				"query": map[string]interface{}{
-					"bool": map[string]interface{}{
-						"should": []interface{}{
-							// Exact match (en yüksek öncelik)
-							map[string]interface{}{
-								"match": map[string]interface{}{
-									"services.name": map[string]interface{}{
-										"query": serviceNameLower,
-										"boost": 3.0,
+		// Service filter (nested query with fuzzy search)
+		if serviceName != nil && *serviceName != "" {
+			serviceNameLower := strings.ToLower(*serviceName)
+			serviceFilter := map[string]interface{}{
+				"nested": map[string]interface{}{
+					"path": "services",
+					"query": map[string]interface{}{
+						"bool": map[string]interface{}{
+							"should": []interface{}{
+								map[string]interface{}{
+									"match": map[string]interface{}{
+										"services.name": map[string]interface{}{
+											"query": serviceNameLower,
+											"boost": 3.0,
+										},
+									},
+								},
+								map[string]interface{}{
+									"match": map[string]interface{}{
+										"services.name": map[string]interface{}{
+											"query":     serviceNameLower,
+											"fuzziness": "AUTO",
+											"boost":     1.0,
+										},
+									},
+								},
+								map[string]interface{}{
+									"prefix": map[string]interface{}{
+										"services.name": map[string]interface{}{
+											"value": serviceNameLower,
+											"boost": 2.0,
+										},
 									},
 								},
 							},
-							// Fuzzy match (benzer isimler)
-							map[string]interface{}{
-								"match": map[string]interface{}{
-									"services.name": map[string]interface{}{
-										"query":     serviceNameLower,
-										"fuzziness": "AUTO",
-										"boost":     1.0,
-									},
-								},
-							},
-							// Prefix match (başlangıç eşleşmesi)
-							map[string]interface{}{
-								"prefix": map[string]interface{}{
-									"services.name": map[string]interface{}{
-										"value": serviceNameLower,
-										"boost": 2.0,
-									},
-								},
-							},
+							"minimum_should_match": 1,
 						},
-						"minimum_should_match": 1,
 					},
 				},
-			},
+			}
+			mustQueries = append(mustQueries, serviceFilter)
 		}
-		mustQueries = append(mustQueries, serviceFilter)
-	}
 
-	// Location-based search
-	if latitude != nil && longitude != nil {
-		geoQuery := map[string]interface{}{
-			"geo_distance": map[string]interface{}{
-				"distance": distanceStr,
-				"location": map[string]float64{
-					"lat": *latitude,
-					"lon": *longitude,
-				},
-			},
-		}
-		filterQueries = append(filterQueries, geoQuery)
-	}
-
-	// Query'yi birleştir
-	if len(mustQueries) > 0 || len(filterQueries) > 0 {
-		boolQuery := map[string]interface{}{}
-		if len(mustQueries) > 0 {
-			boolQuery["must"] = mustQueries
-		}
-		if len(filterQueries) > 0 {
-			boolQuery["filter"] = filterQueries
-		}
-		esQuery["query"] = map[string]interface{}{
-			"bool": boolQuery,
-		}
-	} else {
-		esQuery["query"] = map[string]interface{}{
-			"match_all": map[string]interface{}{},
-		}
-	}
-
-	// Sort by distance (eğer location varsa)
-	if latitude != nil && longitude != nil {
-		esQuery["sort"] = []interface{}{
-			map[string]interface{}{
-				"_geo_distance": map[string]interface{}{
+		// Location-based search
+		if latitude != nil && longitude != nil {
+			geoQuery := map[string]interface{}{
+				"geo_distance": map[string]interface{}{
+					"distance": distanceStr,
 					"location": map[string]float64{
 						"lat": *latitude,
 						"lon": *longitude,
 					},
-					"order":         "asc",
-					"unit":          "km",
-					"distance_type": "plane",
 				},
-			},
+			}
+			filterQueries = append(filterQueries, geoQuery)
 		}
+
+		// Query'yi birleştir
+		if len(mustQueries) > 0 || len(filterQueries) > 0 {
+			boolQuery := map[string]interface{}{}
+			if len(mustQueries) > 0 {
+				boolQuery["must"] = mustQueries
+			}
+			if len(filterQueries) > 0 {
+				boolQuery["filter"] = filterQueries
+			}
+			esQuery["query"] = map[string]interface{}{
+				"bool": boolQuery,
+			}
+		} else {
+			esQuery["query"] = map[string]interface{}{
+				"match_all": map[string]interface{}{},
+			}
+		}
+
+		// Sort by distance
+		if latitude != nil && longitude != nil {
+			esQuery["sort"] = []interface{}{
+				map[string]interface{}{
+					"_geo_distance": map[string]interface{}{
+						"location": map[string]float64{
+							"lat": *latitude,
+							"lon": *longitude,
+						},
+						"order":         "asc",
+						"unit":          "km",
+						"distance_type": "plane",
+					},
+				},
+			}
+		}
+
+		return esQuery
+	}
+
+	// Barber alanları
+	barberFields := []string{
+		"name^3",
+		"username^3",
+		"bio^2",
+		"shopNames^1.5",
+		"shopAddresses^1",
+	}
+
+	// Shop alanları
+	shopFields := []string{
+		"name^3",
+		"description^2",
+		"address^1.5",
+		"phoneNumber^1",
+		"email^1",
 	}
 
 	// Search barbers
 	if searchType == "barber" || searchType == "all" {
-		indexName := "barbertime_barbers"
-
-		barberResults, err := elasticsearch.Search(indexName, esQuery, from, limit)
+		barberQuery := buildQuery(barberFields)
+		barberResults, err := elasticsearch.Search("barbertime_barbers", barberQuery, from, limit)
 		if err == nil {
 			barbers := s.parseBarberResults(barberResults)
 			results.Barbers = barbers
@@ -233,9 +238,8 @@ func (s *searchService) searchWithElasticsearch(query string, searchType string,
 
 	// Search shops
 	if searchType == "shop" || searchType == "all" {
-		indexName := "barbertime_shops"
-
-		shopResults, err := elasticsearch.Search(indexName, esQuery, from, limit)
+		shopQuery := buildQuery(shopFields)
+		shopResults, err := elasticsearch.Search("barbertime_shops", shopQuery, from, limit)
 		if err == nil {
 			shops := s.parseShopResults(shopResults)
 			results.Shops = shops
