@@ -6,6 +6,7 @@ import (
 	"barbertime_go/internal/utils"
 	"barbertime_go/pkg/elasticsearch"
 	"barbertime_go/pkg/redis"
+	"encoding/json"
 	"fmt"
 	"log"
 	"strconv"
@@ -245,6 +246,10 @@ func (s *searchService) searchWithElasticsearch(query string, searchType string,
 	// Search shops (service filter kullanılır)
 	if searchType == "shop" || searchType == "all" {
 		shopQuery := buildQuery(shopFields, true)
+		// Debug: Query'yi logla
+		if queryJSON, err := json.Marshal(shopQuery); err == nil {
+			log.Printf("Shop Elasticsearch query: %s", string(queryJSON))
+		}
 		shopResults, err := elasticsearch.Search("barbertime_shops", shopQuery, from, limit)
 		if err != nil {
 			log.Printf("Elasticsearch shop search error: %v", err)
