@@ -53,6 +53,8 @@ func AutoMigrate() error {
 		&models.PhoneVerificationCode{},
 		&models.Photo{},
 		&models.PhotoLike{},
+		&models.ShopClosedDay{},
+		&models.ShopWorkingHours{},
 	)
 
 	if err != nil {

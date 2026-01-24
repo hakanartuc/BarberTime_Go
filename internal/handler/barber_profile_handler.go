@@ -89,3 +89,24 @@ func (h *BarberProfileHandler) UpdateBarberProfile(c *gin.Context) {
 
 	utils.SuccessResponse(c, http.StatusOK, barber)
 }
+
+type UpdateBarberSystemStatusRequest struct {
+	IsSystemOff bool `json:"isSystemOff"`
+}
+
+func (h *BarberProfileHandler) UpdateSystemStatus(c *gin.Context) {
+	userID, _ := c.Get("userID")
+	var req UpdateBarberSystemStatusRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.BadRequest(c, err.Error())
+		return
+	}
+
+	barber, err := h.barberProfileService.UpdateSystemStatus(userID.(uint), req.IsSystemOff)
+	if err != nil {
+		utils.BadRequest(c, err.Error())
+		return
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, barber)
+}

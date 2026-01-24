@@ -255,3 +255,74 @@ func (h *AppointmentHandler) CompleteAppointment(c *gin.Context) {
 		"message": "Appointment completed successfully",
 	})
 }
+
+// GetBarberAllAppointments returns all appointments for the barber with optional date filtering
+// Returns all statuses: pending, approved, rejected, completed
+func (h *AppointmentHandler) GetBarberAllAppointments(c *gin.Context) {
+	userID, _ := c.Get("userID")
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
+
+	// Opsiyonel tarih filtreleri
+	var startDate, endDate *time.Time
+
+	if startDateStr := c.Query("startDate"); startDateStr != "" {
+		parsed, err := time.Parse("2006-01-02", startDateStr)
+		if err != nil {
+			utils.BadRequest(c, "Invalid startDate format. Use YYYY-MM-DD")
+			return
+		}
+		startDate = &parsed
+	}
+
+	if endDateStr := c.Query("endDate"); endDateStr != "" {
+		parsed, err := time.Parse("2006-01-02", endDateStr)
+		if err != nil {
+			utils.BadRequest(c, "Invalid endDate format. Use YYYY-MM-DD")
+			return
+		}
+		endDate = &parsed
+	}
+
+	appointments, pagination, err := h.appointmentService.GetBarberAllAppointments(userID.(uint), startDate, endDate, page, limit)
+	if err != nil {
+		utils.BadRequest(c, err.Error())
+		return
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, gin.H{
+		"appointments": appointments,
+		"pagination":   pagination,
+	})
+}
+
+// GetBarberDailyAppointments returns all appointments for the barber on a specific date
+// Returns all statuses: pending, approved, rejected, completed
+func (h *AppointmentHandler) GetBarberDailyAppointments(c *gin.Context) {
+	userID, _ := c.Get("userID")
+
+	// Zorunlu date parametresi
+	dateStr := c.Query("date")
+	if dateStr == "" {
+		utils.BadRequest(c, "date parameter is required. Use YYYY-MM-DD format")
+		return
+	}
+
+	date, err := time.Parse("2006-01-02", dateStr)
+	if err != nil {
+		utils.BadRequest(c, "Invalid date format. Use YYYY-MM-DD")
+		return
+	}
+
+	appointments, err := h.appointmentService.GetBarberDailyAppointments(userID.(uint), date)
+	if err != nil {
+		utils.BadRequest(c, err.Error())
+		return
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, gin.H{
+		"date":         dateStr,
+		"appointments": appointments,
+		"total":        len(appointments),
+	})
+}

@@ -25,6 +25,7 @@ type Shop struct {
 	Location     Location       `gorm:"embedded;embeddedPrefix:location_" json:"location"`
 	WorkingHours string         `gorm:"type:text" json:"workingHours"`                    // JSON formatında saklanacak
 	ClosedDays   string         `gorm:"type:text" json:"closedDays"`                      // JSON formatında saklanacak
+	IsSystemOff  bool           `gorm:"default:false" json:"isSystemOff"`                 // Randevu sistemi kapalı mı (tatil modu)
 	Status       ShopStatus     `gorm:"type:varchar(20);default:'pending'" json:"status"` // pending, confirmed, rejected
 	CreatedAt    time.Time      `json:"createdAt"`
 	UpdatedAt    time.Time      `json:"-"`

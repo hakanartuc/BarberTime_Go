@@ -85,6 +85,8 @@ func main() {
 	phoneVerificationCodeRepo := repository.NewPhoneVerificationCodeRepository()
 	photoRepo := repository.NewPhotoRepository()
 	photoLikeRepo := repository.NewPhotoLikeRepository()
+	closedDayRepo := repository.NewShopClosedDayRepository()
+	workingHoursRepo := repository.NewShopWorkingHoursRepository()
 
 	// Message ve Cache servisleri
 	messageService := service.NewMessageService()
@@ -98,14 +100,14 @@ func main() {
 	userService := service.NewUserService(userRepo)
 	barberService := service.NewBarberService(barberRepo, appointmentRepo, cacheService)
 	shopService := service.NewShopService(shopRepo, barberRepo, barberShopRepo, reviewRepo, cacheService)
-	appointmentService := service.NewAppointmentService(appointmentRepo, barberRepo, serviceRepo, messageService)
+	appointmentService := service.NewAppointmentService(appointmentRepo, barberRepo, barberShopRepo, shopRepo, serviceRepo, messageService)
 	reviewService := service.NewReviewService(reviewRepo, messageService)
 	favoriteService := service.NewFavoriteService(favoriteRepo)
 	serviceService := service.NewServiceService(serviceRepo)
 	shopServiceService := service.NewShopServiceService(shopServiceRepo, serviceRepo)
 	searchService := service.NewSearchService(barberRepo, shopRepo, shopServiceRepo, barberShopRepo)
 	barberProfileService := service.NewBarberProfileService(barberRepo, userRepo, cacheService, messageService)
-	shopProfileService := service.NewShopProfileService(shopRepo, userRepo, barberRepo, barberShopRepo, shopServiceRepo, serviceRepo, cacheService, messageService)
+	shopProfileService := service.NewShopProfileService(shopRepo, userRepo, barberRepo, barberShopRepo, shopServiceRepo, serviceRepo, closedDayRepo, workingHoursRepo, cacheService, messageService)
 	barberShopRequestService := service.NewBarberShopRequestService(barberShopRequestRepo, barberRepo, shopRepo, barberShopRepo, cacheService, messageService)
 	adminService := service.NewAdminService(shopRepo, serviceRepo, cacheService, messageService)
 	photoService := service.NewPhotoService(photoRepo, barberRepo, shopRepo, barberShopRepo, photoLikeRepo)
@@ -180,8 +182,11 @@ func main() {
 			barberProfile.POST("/register", barberProfileHandler.RegisterAsBarber)
 			barberProfile.GET("/profile", barberProfileHandler.GetBarberProfile)
 			barberProfile.PATCH("/profile", barberProfileHandler.UpdateBarberProfile)
+			barberProfile.PATCH("/system-status", barberProfileHandler.UpdateSystemStatus)
 
 			// Barber Appointment routes
+			barberProfile.GET("/appointments", appointmentHandler.GetBarberAllAppointments)
+			barberProfile.GET("/appointments/daily", appointmentHandler.GetBarberDailyAppointments)
 			barberProfile.GET("/appointments/pending", appointmentHandler.GetBarberPendingAppointments)
 			barberProfile.GET("/appointments/upcoming", appointmentHandler.GetBarberUpcomingAppointments)
 			barberProfile.GET("/appointments/past", appointmentHandler.GetBarberPastAppointments)
@@ -211,6 +216,20 @@ func main() {
 			shopProfile.POST("/:id/services", shopProfileHandler.CreateShopService)
 			shopProfile.PATCH("/:id/services/:serviceId", shopProfileHandler.UpdateShopService)
 			shopProfile.DELETE("/:id/services/:serviceId", shopProfileHandler.DeleteShopService)
+
+			// Closed Days routes
+			shopProfile.GET("/:shopId/closed-days", shopProfileHandler.GetClosedDays)
+			shopProfile.POST("/:shopId/closed-days", shopProfileHandler.CreateClosedDay)
+			shopProfile.PATCH("/:shopId/closed-days/:id", shopProfileHandler.UpdateClosedDay)
+			shopProfile.DELETE("/:shopId/closed-days/:id", shopProfileHandler.DeleteClosedDay)
+			shopProfile.PATCH("/:shopId/closed-days/:id/toggle", shopProfileHandler.ToggleClosedDay)
+
+			// Working Hours routes
+			shopProfile.GET("/:shopId/working-hours", shopProfileHandler.GetWorkingHours)
+			shopProfile.PATCH("/:shopId/working-hours", shopProfileHandler.UpdateWorkingHours)
+
+			// System Status route
+			shopProfile.PATCH("/:shopId/system-status", shopProfileHandler.UpdateSystemStatus)
 		}
 
 		// Barber Shop Request routes

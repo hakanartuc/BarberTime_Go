@@ -21,6 +21,8 @@ type AppointmentService interface {
 	GetBarberPendingAppointments(userID uint, page, limit int) ([]models.Appointment, utils.Pagination, error)
 	GetBarberUpcomingAppointments(userID uint, page, limit int) ([]models.Appointment, utils.Pagination, error)
 	GetBarberPastAppointments(userID uint, page, limit int) ([]models.Appointment, utils.Pagination, error)
+	GetBarberAllAppointments(userID uint, startDate, endDate *time.Time, page, limit int) ([]models.Appointment, utils.Pagination, error)
+	GetBarberDailyAppointments(userID uint, date time.Time) ([]models.Appointment, error)
 	ApproveAppointment(appointmentID, userID uint) error
 	RejectAppointment(appointmentID, userID uint, reason *string) error
 	CompleteAppointment(appointmentID, userID uint) error
@@ -29,6 +31,8 @@ type AppointmentService interface {
 type appointmentService struct {
 	appointmentRepo repository.AppointmentRepository
 	barberRepo      repository.BarberRepository
+	barberShopRepo  repository.BarberShopRepository
+	shopRepo        repository.ShopRepository
 	serviceRepo     repository.ServiceRepository
 	messageService  MessageService
 }
@@ -36,12 +40,16 @@ type appointmentService struct {
 func NewAppointmentService(
 	appointmentRepo repository.AppointmentRepository,
 	barberRepo repository.BarberRepository,
+	barberShopRepo repository.BarberShopRepository,
+	shopRepo repository.ShopRepository,
 	serviceRepo repository.ServiceRepository,
 	messageService MessageService,
 ) AppointmentService {
 	return &appointmentService{
 		appointmentRepo: appointmentRepo,
 		barberRepo:      barberRepo,
+		barberShopRepo:  barberShopRepo,
+		shopRepo:        shopRepo,
 		serviceRepo:     serviceRepo,
 		messageService:  messageService,
 	}
@@ -77,9 +85,27 @@ func (s *appointmentService) GetAppointmentByID(id uint) (*models.Appointment, e
 
 func (s *appointmentService) CreateAppointment(userID uint, barberID uint, serviceIDs []uint, appointmentTime time.Time, notes *string) (*models.Appointment, error) {
 	// Berber kontrolü
-	_, err := s.barberRepo.GetByID(barberID)
+	barber, err := s.barberRepo.GetByID(barberID)
 	if err != nil {
 		return nil, errors.New("barber not found")
+	}
+
+	// Barber isSystemOff kontrolü
+	if barber.IsSystemOff {
+		return nil, errors.New("barber is currently not accepting appointments")
+	}
+
+	// Barber'ın bağlı olduğu shop'ların isSystemOff kontrolü
+	barberShops, err := s.barberShopRepo.GetByBarberID(barberID)
+	if err == nil {
+		for _, bs := range barberShops {
+			if bs.Status == models.BarberShopStatusApproved {
+				shop, shopErr := s.shopRepo.GetByID(bs.ShopID)
+				if shopErr == nil && shop.IsSystemOff {
+					return nil, errors.New("the shop this barber belongs to is currently not accepting appointments")
+				}
+			}
+		}
 	}
 
 	// UTC'ye çevir
@@ -330,4 +356,32 @@ func (s *appointmentService) CompleteAppointment(appointmentID, userID uint) err
 	s.messageService.PublishAppointmentCompleted(appointmentID, appointment.UserID, barber.ID)
 
 	return nil
+}
+
+// GetBarberAllAppointments returns all appointments for the barber with optional date filtering
+// Returns all statuses: pending, approved, rejected, completed
+func (s *appointmentService) GetBarberAllAppointments(userID uint, startDate, endDate *time.Time, page, limit int) ([]models.Appointment, utils.Pagination, error) {
+	barber, err := s.getBarberByUserID(userID)
+	if err != nil {
+		return nil, utils.Pagination{}, err
+	}
+
+	appointments, total, err := s.appointmentRepo.GetAllByBarberID(barber.ID, startDate, endDate, page, limit)
+	if err != nil {
+		return nil, utils.Pagination{}, err
+	}
+
+	pagination := utils.NewPagination(page, limit, total)
+	return appointments, pagination, nil
+}
+
+// GetBarberDailyAppointments returns all appointments for the barber on a specific date
+// Returns all statuses: pending, approved, rejected, completed
+func (s *appointmentService) GetBarberDailyAppointments(userID uint, date time.Time) ([]models.Appointment, error) {
+	barber, err := s.getBarberByUserID(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	return s.appointmentRepo.GetDailyByBarberID(barber.ID, date)
 }

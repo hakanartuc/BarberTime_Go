@@ -276,3 +276,213 @@ func (h *ShopProfileHandler) DeleteShopService(c *gin.Context) {
 
 	utils.NoContentResponse(c, "Shop service deleted successfully")
 }
+
+// ==================== Closed Days ====================
+
+func (h *ShopProfileHandler) GetClosedDays(c *gin.Context) {
+	shopID, err := strconv.ParseUint(c.Param("shopId"), 10, 32)
+	if err != nil {
+		utils.BadRequest(c, "Invalid shop ID")
+		return
+	}
+
+	closedDays, err := h.shopProfileService.GetClosedDays(uint(shopID))
+	if err != nil {
+		utils.NotFound(c, err.Error())
+		return
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, closedDays)
+}
+
+type CreateClosedDayRequest struct {
+	Date   string `json:"date" binding:"required"`
+	Reason string `json:"reason"`
+}
+
+func (h *ShopProfileHandler) CreateClosedDay(c *gin.Context) {
+	userID, _ := c.Get("userID")
+	shopID, err := strconv.ParseUint(c.Param("shopId"), 10, 32)
+	if err != nil {
+		utils.BadRequest(c, "Invalid shop ID")
+		return
+	}
+
+	var req CreateClosedDayRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.BadRequest(c, err.Error())
+		return
+	}
+
+	closedDay, err := h.shopProfileService.CreateClosedDay(uint(shopID), userID.(uint), req.Date, req.Reason)
+	if err != nil {
+		utils.BadRequest(c, err.Error())
+		return
+	}
+
+	utils.SuccessResponse(c, http.StatusCreated, closedDay)
+}
+
+type UpdateClosedDayRequest struct {
+	Date   *string `json:"date"`
+	Reason *string `json:"reason"`
+}
+
+func (h *ShopProfileHandler) UpdateClosedDay(c *gin.Context) {
+	userID, _ := c.Get("userID")
+	shopID, err := strconv.ParseUint(c.Param("shopId"), 10, 32)
+	if err != nil {
+		utils.BadRequest(c, "Invalid shop ID")
+		return
+	}
+
+	closedDayID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		utils.BadRequest(c, "Invalid closed day ID")
+		return
+	}
+
+	var req UpdateClosedDayRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.BadRequest(c, err.Error())
+		return
+	}
+
+	closedDay, err := h.shopProfileService.UpdateClosedDay(uint(shopID), userID.(uint), uint(closedDayID), req.Date, req.Reason)
+	if err != nil {
+		utils.BadRequest(c, err.Error())
+		return
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, closedDay)
+}
+
+func (h *ShopProfileHandler) DeleteClosedDay(c *gin.Context) {
+	userID, _ := c.Get("userID")
+	shopID, err := strconv.ParseUint(c.Param("shopId"), 10, 32)
+	if err != nil {
+		utils.BadRequest(c, "Invalid shop ID")
+		return
+	}
+
+	closedDayID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		utils.BadRequest(c, "Invalid closed day ID")
+		return
+	}
+
+	if err := h.shopProfileService.DeleteClosedDay(uint(shopID), userID.(uint), uint(closedDayID)); err != nil {
+		utils.BadRequest(c, err.Error())
+		return
+	}
+
+	utils.NoContentResponse(c, "Closed day deleted successfully")
+}
+
+type ToggleClosedDayRequest struct {
+	IsActive bool `json:"isActive"`
+}
+
+func (h *ShopProfileHandler) ToggleClosedDay(c *gin.Context) {
+	userID, _ := c.Get("userID")
+	shopID, err := strconv.ParseUint(c.Param("shopId"), 10, 32)
+	if err != nil {
+		utils.BadRequest(c, "Invalid shop ID")
+		return
+	}
+
+	closedDayID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		utils.BadRequest(c, "Invalid closed day ID")
+		return
+	}
+
+	var req ToggleClosedDayRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.BadRequest(c, err.Error())
+		return
+	}
+
+	closedDay, err := h.shopProfileService.ToggleClosedDay(uint(shopID), userID.(uint), uint(closedDayID), req.IsActive)
+	if err != nil {
+		utils.BadRequest(c, err.Error())
+		return
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, closedDay)
+}
+
+// ==================== Working Hours ====================
+
+func (h *ShopProfileHandler) GetWorkingHours(c *gin.Context) {
+	shopID, err := strconv.ParseUint(c.Param("shopId"), 10, 32)
+	if err != nil {
+		utils.BadRequest(c, "Invalid shop ID")
+		return
+	}
+
+	workingHours, err := h.shopProfileService.GetWorkingHours(uint(shopID))
+	if err != nil {
+		utils.NotFound(c, err.Error())
+		return
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, workingHours)
+}
+
+type UpdateWorkingHoursRequest struct {
+	OpenTime  string `json:"openTime" binding:"required"`
+	CloseTime string `json:"closeTime" binding:"required"`
+}
+
+func (h *ShopProfileHandler) UpdateWorkingHours(c *gin.Context) {
+	userID, _ := c.Get("userID")
+	shopID, err := strconv.ParseUint(c.Param("shopId"), 10, 32)
+	if err != nil {
+		utils.BadRequest(c, "Invalid shop ID")
+		return
+	}
+
+	var req UpdateWorkingHoursRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.BadRequest(c, err.Error())
+		return
+	}
+
+	workingHours, err := h.shopProfileService.UpdateWorkingHours(uint(shopID), userID.(uint), req.OpenTime, req.CloseTime)
+	if err != nil {
+		utils.BadRequest(c, err.Error())
+		return
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, workingHours)
+}
+
+// ==================== System Status ====================
+
+type UpdateShopSystemStatusRequest struct {
+	IsSystemOff bool `json:"isSystemOff"`
+}
+
+func (h *ShopProfileHandler) UpdateSystemStatus(c *gin.Context) {
+	userID, _ := c.Get("userID")
+	shopID, err := strconv.ParseUint(c.Param("shopId"), 10, 32)
+	if err != nil {
+		utils.BadRequest(c, "Invalid shop ID")
+		return
+	}
+
+	var req UpdateShopSystemStatusRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		utils.BadRequest(c, err.Error())
+		return
+	}
+
+	shop, err := h.shopProfileService.UpdateSystemStatus(uint(shopID), userID.(uint), req.IsSystemOff)
+	if err != nil {
+		utils.BadRequest(c, err.Error())
+		return
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, shop)
+}

@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -192,22 +193,32 @@ func (s *searchService) searchWithElasticsearch(query string, searchType string,
 			}
 		}
 
-		// Sort by distance
-		if latitude != nil && longitude != nil {
-			esQuery["sort"] = []interface{}{
-				map[string]interface{}{
-					"_geo_distance": map[string]interface{}{
-						"location": map[string]float64{
-							"lat": *latitude,
-							"lon": *longitude,
-						},
-						"order":         "asc",
-						"unit":          "km",
-						"distance_type": "plane",
-					},
+		// Sort: önce isSystemOff = false (aktif olanlar), sonra mesafeye göre
+		sortCriteria := []interface{}{
+			map[string]interface{}{
+				"isSystemOff": map[string]interface{}{
+					"order":   "asc",
+					"missing": "_last",
 				},
-			}
+			},
 		}
+
+		// Sonra distance by
+		if latitude != nil && longitude != nil {
+			sortCriteria = append(sortCriteria, map[string]interface{}{
+				"_geo_distance": map[string]interface{}{
+					"location": map[string]float64{
+						"lat": *latitude,
+						"lon": *longitude,
+					},
+					"order":         "asc",
+					"unit":          "km",
+					"distance_type": "plane",
+				},
+			})
+		}
+
+		esQuery["sort"] = sortCriteria
 
 		return esQuery
 	}
@@ -320,6 +331,11 @@ func (s *searchService) parseBarberResults(esResult map[string]interface{}) []mo
 			barber.Experience = int(exp)
 		}
 
+		// IsSystemOff
+		if isSystemOff, ok := source["isSystemOff"].(bool); ok {
+			barber.IsSystemOff = isSystemOff
+		}
+
 		// Rating
 		if ratingMap, ok := source["rating"].(map[string]interface{}); ok {
 			if avg, ok := ratingMap["average"].(float64); ok {
@@ -413,6 +429,11 @@ func (s *searchService) parseShopResults(esResult map[string]interface{}) []mode
 		// Banner
 		if banner, ok := source["banner"].(string); ok {
 			shop.Banner = &banner
+		}
+
+		// IsSystemOff
+		if isSystemOff, ok := source["isSystemOff"].(bool); ok {
+			shop.IsSystemOff = isSystemOff
 		}
 
 		// Location
@@ -534,6 +555,8 @@ func (s *searchService) searchWithDatabase(query string, searchType string, lati
 				}
 				filteredBarbers = append(filteredBarbers, barber)
 			}
+			// isSystemOff = true olanları en alta sırala
+			sortBarbersBySystemStatus(filteredBarbers)
 			results.Barbers = filteredBarbers
 		}
 
@@ -569,6 +592,8 @@ func (s *searchService) searchWithDatabase(query string, searchType string, lati
 				}
 				filteredShops = append(filteredShops, shop)
 			}
+			// isSystemOff = true olanları en alta sırala
+			sortShopsBySystemStatus(filteredShops)
 			results.Shops = filteredShops
 		}
 	} else {
@@ -709,6 +734,9 @@ func (s *searchService) IndexBarber(barber *models.Barber) error {
 				"location": map[string]interface{}{
 					"type": "geo_point",
 				},
+				"isSystemOff": map[string]interface{}{
+					"type": "boolean",
+				},
 			},
 		},
 	}
@@ -718,12 +746,13 @@ func (s *searchService) IndexBarber(barber *models.Barber) error {
 
 	// Document oluştur
 	doc := map[string]interface{}{
-		"id":         barber.ID,
-		"userId":     barber.UserID,
-		"username":   barber.Username,
-		"name":       barber.Name,
-		"bio":        barber.Bio,
-		"experience": barber.Experience,
+		"id":          barber.ID,
+		"userId":      barber.UserID,
+		"username":    barber.Username,
+		"name":        barber.Name,
+		"bio":         barber.Bio,
+		"experience":  barber.Experience,
+		"isSystemOff": barber.IsSystemOff,
 		"rating": map[string]interface{}{
 			"average":     barber.Rating.Average,
 			"totalReview": barber.Rating.TotalReview,
@@ -854,6 +883,9 @@ func (s *searchService) IndexShop(shop *models.Shop) error {
 				"location": map[string]interface{}{
 					"type": "geo_point",
 				},
+				"isSystemOff": map[string]interface{}{
+					"type": "boolean",
+				},
 				"owners": map[string]interface{}{
 					"type": "nested",
 					"properties": map[string]interface{}{
@@ -955,6 +987,7 @@ func (s *searchService) IndexShop(shop *models.Shop) error {
 		"phoneNumber": shop.PhoneNumber,
 		"email":       shop.Email,
 		"website":     shop.Website,
+		"isSystemOff": shop.IsSystemOff,
 		"location": map[string]float64{
 			"lat": shop.Location.Latitude,
 			"lon": shop.Location.Longitude,
@@ -1001,4 +1034,26 @@ func (s *searchService) DeleteShopFromIndex(shopID uint) error {
 	}
 	indexName := "barbertime_shops"
 	return elasticsearch.DeleteDocument(indexName, strconv.FormatUint(uint64(shopID), 10))
+}
+
+// sortBarbersBySystemStatus isSystemOff = false olanları üste, true olanları alta sıralar
+func sortBarbersBySystemStatus(barbers []models.Barber) {
+	sort.SliceStable(barbers, func(i, j int) bool {
+		// false (aktif) olanlar önce gelsin
+		if !barbers[i].IsSystemOff && barbers[j].IsSystemOff {
+			return true
+		}
+		return false
+	})
+}
+
+// sortShopsBySystemStatus isSystemOff = false olanları üste, true olanları alta sıralar
+func sortShopsBySystemStatus(shops []models.Shop) {
+	sort.SliceStable(shops, func(i, j int) bool {
+		// false (aktif) olanlar önce gelsin
+		if !shops[i].IsSystemOff && shops[j].IsSystemOff {
+			return true
+		}
+		return false
+	})
 }

@@ -20,6 +20,7 @@ type BarberProfileService interface {
 	RegisterAsBarber(userID uint, name string, bio string, experience int) (*models.Barber, error)
 	GetBarberProfile(userID uint) (*models.Barber, error)
 	UpdateBarberProfile(userID uint, name *string, bio *string, experience *int, username *string) (*models.Barber, error)
+	UpdateSystemStatus(userID uint, isSystemOff bool) (*models.Barber, error)
 }
 
 type barberProfileService struct {
@@ -217,4 +218,32 @@ func (s *barberProfileService) normalizeToASCII(str string) string {
 	result, _, _ := transform.String(t, str)
 
 	return result
+}
+
+func (s *barberProfileService) UpdateSystemStatus(userID uint, isSystemOff bool) (*models.Barber, error) {
+	barber, err := s.barberRepo.GetByUserID(userID)
+	if err != nil {
+		return nil, errors.New("barber profile not found")
+	}
+
+	barber.IsSystemOff = isSystemOff
+
+	// 1. DB'yi güncelle
+	if err := s.barberRepo.Update(barber); err != nil {
+		return nil, err
+	}
+
+	updatedBarber, err := s.barberRepo.GetByUserID(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	// 2. Cache'i güncelle
+	cacheKey := fmt.Sprintf("barber:%d", updatedBarber.ID)
+	s.cacheService.Set(cacheKey, updatedBarber, 1*time.Hour)
+
+	// 3. RabbitMQ ile event mesajı gönder
+	s.messageService.PublishBarberUpdated(updatedBarber.ID)
+
+	return updatedBarber, nil
 }

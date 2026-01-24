@@ -7,17 +7,18 @@ import (
 )
 
 type Barber struct {
-	ID         uint           `gorm:"primaryKey" json:"id"`
-	UserID     uint           `gorm:"uniqueIndex;not null" json:"userId"`
-	Username   string         `gorm:"uniqueIndex;not null" json:"username"`
-	Name       string         `gorm:"not null" json:"name"`
-	Avatar     *string        `gorm:"-" json:"avatar"` // DB'de yok, User'dan alınır
-	Bio        string         `json:"bio"`
-	Experience int            `json:"experience"` // Yıl cinsinden
-	Rating     Rating         `gorm:"embedded;embeddedPrefix:rating_" json:"rating"`
-	CreatedAt  time.Time      `json:"createdAt"`
-	UpdatedAt  time.Time      `json:"-"`
-	DeletedAt  gorm.DeletedAt `gorm:"index" json:"-"`
+	ID          uint           `gorm:"primaryKey" json:"id"`
+	UserID      uint           `gorm:"uniqueIndex;not null" json:"userId"`
+	Username    string         `gorm:"uniqueIndex;not null" json:"username"`
+	Name        string         `gorm:"not null" json:"name"`
+	Avatar      *string        `gorm:"-" json:"avatar"` // DB'de yok, User'dan alınır
+	Bio         string         `json:"bio"`
+	Experience  int            `json:"experience"` // Yıl cinsinden
+	IsSystemOff bool           `gorm:"default:false" json:"isSystemOff"` // Randevu sistemi kapalı mı (tatil modu)
+	Rating      Rating         `gorm:"embedded;embeddedPrefix:rating_" json:"rating"`
+	CreatedAt   time.Time      `json:"createdAt"`
+	UpdatedAt   time.Time      `json:"-"`
+	DeletedAt   gorm.DeletedAt `gorm:"index" json:"-"`
 
 	User         User                `gorm:"foreignKey:UserID" json:"-"`
 	Shops        []Shop              `gorm:"many2many:barber_shops;" json:"shops,omitempty"`

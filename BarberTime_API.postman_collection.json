@@ -842,6 +842,69 @@
 					}
 				},
 				{
+					"name": "Get All Appointments (Barber)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/barber/appointments?page=1&limit=20&startDate=2026-01-01&endDate=2026-12-31",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "barber", "appointments"],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "limit",
+									"value": "20"
+								},
+								{
+									"key": "startDate",
+									"value": "2026-01-01",
+									"description": "Opsiyonel - Başlangıç tarihi (YYYY-MM-DD)"
+								},
+								{
+									"key": "endDate",
+									"value": "2026-12-31",
+									"description": "Opsiyonel - Bitiş tarihi (YYYY-MM-DD)"
+								}
+							]
+						},
+						"description": "Berber'ın tüm randevularını listeler (tüm statüler: pending, approved, rejected, completed). Opsiyonel startDate ve endDate ile filtreleme yapılabilir."
+					}
+				},
+				{
+					"name": "Get Daily Appointments (Barber)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/barber/appointments/daily?date=2026-01-24",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "barber", "appointments", "daily"],
+							"query": [
+								{
+									"key": "date",
+									"value": "2026-01-24",
+									"description": "Zorunlu - İstenilen günün tarihi (YYYY-MM-DD)"
+								}
+							]
+						},
+						"description": "Berber'ın belirli bir güne ait tüm randevularını listeler (tüm statüler: pending, approved, rejected, completed). date parametresi zorunludur."
+					}
+				},
+				{
 					"name": "Get Pending Appointments (Barber)",
 					"request": {
 						"method": "GET",
@@ -985,6 +1048,32 @@
 							"path": ["api", "barber", "appointments", "1", "complete"]
 						},
 						"description": "Berber bir randevuyu tamamlandı olarak işaretler. Sadece 'approved' durumunda ve randevu zamanı geçmiş randevular tamamlanabilir."
+					}
+				},
+				{
+					"name": "Update System Status (Barber)",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"isSystemOff\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/barber/system-status",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "barber", "system-status"]
+						},
+						"description": "Barber'ın randevu sistemini kapatır/açar (tatil modu). isSystemOff: true olduğunda randevu sistemi kapalıdır."
 					}
 				}
 			]
@@ -1192,6 +1281,190 @@
 							"path": ["api", "shop", "1", "services", "1"]
 						},
 						"description": "Shop servisini siler (sadece owner)"
+					}
+				},
+				{
+					"name": "Get Closed Days",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/shop/1/closed-days",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "shop", "1", "closed-days"]
+						},
+						"description": "Shop'un kapalı günlerini listeler"
+					}
+				},
+				{
+					"name": "Create Closed Day",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"date\": \"2026-01-29\",\n    \"reason\": \"Resmi Tatil\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/shop/1/closed-days",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "shop", "1", "closed-days"]
+						},
+						"description": "Shop'a kapalı gün ekler (sadece owner). date formatı: YYYY-MM-DD"
+					}
+				},
+				{
+					"name": "Update Closed Day",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"date\": \"2026-01-30\",\n    \"reason\": \"Yıllık İzin\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/shop/1/closed-days/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "shop", "1", "closed-days", "1"]
+						},
+						"description": "Kapalı günü günceller (sadece owner). Tüm alanlar opsiyoneldir."
+					}
+				},
+				{
+					"name": "Delete Closed Day",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/shop/1/closed-days/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "shop", "1", "closed-days", "1"]
+						},
+						"description": "Kapalı günü siler (sadece owner)"
+					}
+				},
+				{
+					"name": "Toggle Closed Day",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"isActive\": false\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/shop/1/closed-days/1/toggle",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "shop", "1", "closed-days", "1", "toggle"]
+						},
+						"description": "Kapalı günün aktif/pasif durumunu değiştirir (sadece owner)"
+					}
+				},
+				{
+					"name": "Get Working Hours",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/shop/1/working-hours",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "shop", "1", "working-hours"]
+						},
+						"description": "Shop'un çalışma saatlerini getirir. Her gün için ayrı kayıt döner (0: Pazartesi, 6: Pazar)"
+					}
+				},
+				{
+					"name": "Update Working Hours",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"openTime\": \"09:00\",\n    \"closeTime\": \"21:00\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/shop/1/working-hours",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "shop", "1", "working-hours"]
+						},
+						"description": "Shop'un çalışma saatlerini günceller (sadece owner). Tüm günler için aynı saatler uygulanır. Format: HH:MM"
+					}
+				},
+				{
+					"name": "Update System Status (Shop)",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"isSystemOff\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/shop/1/system-status",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "shop", "1", "system-status"]
+						},
+						"description": "Shop'un randevu sistemini kapatır/açar (tatil modu). isSystemOff: true olduğunda randevu sistemi kapalıdır. Sadece shop owner'ları bu işlemi yapabilir."
 					}
 				}
 			]

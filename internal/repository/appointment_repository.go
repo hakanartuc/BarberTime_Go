@@ -21,6 +21,8 @@ type AppointmentRepository interface {
 	GetPendingByBarberID(barberID uint, page, limit int) ([]models.Appointment, int64, error)
 	GetUpcomingByBarberID(barberID uint, page, limit int) ([]models.Appointment, int64, error)
 	GetPastByBarberID(barberID uint, page, limit int) ([]models.Appointment, int64, error)
+	GetAllByBarberID(barberID uint, startDate, endDate *time.Time, page, limit int) ([]models.Appointment, int64, error)
+	GetDailyByBarberID(barberID uint, date time.Time) ([]models.Appointment, error)
 }
 
 type appointmentRepository struct {
@@ -162,4 +164,54 @@ func (r *appointmentRepository) GetPastByBarberID(barberID uint, page, limit int
 
 	err := query.Offset(offset).Limit(limit).Find(&appointments).Error
 	return appointments, total, err
+}
+
+// GetAllByBarberID returns all appointments for a barber with optional date filtering
+// Returns all statuses (pending, approved, rejected, completed)
+func (r *appointmentRepository) GetAllByBarberID(barberID uint, startDate, endDate *time.Time, page, limit int) ([]models.Appointment, int64, error) {
+	var appointments []models.Appointment
+	var total int64
+
+	offset := (page - 1) * limit
+
+	query := r.db.Model(&models.Appointment{}).
+		Where("barber_id = ?", barberID).
+		Preload("User").Preload("Barber").Preload("Barber.Shops").Preload("Services")
+
+	// Tarih filtreleri
+	if startDate != nil {
+		query = query.Where("appointment_time >= ?", startDate.UTC())
+	}
+	if endDate != nil {
+		// endDate'in sonuna kadar dahil etmek için +1 gün
+		endOfDay := endDate.UTC().Add(24 * time.Hour)
+		query = query.Where("appointment_time < ?", endOfDay)
+	}
+
+	query = query.Order("appointment_time DESC")
+
+	if err := query.Count(&total).Error; err != nil {
+		return nil, 0, err
+	}
+
+	err := query.Offset(offset).Limit(limit).Find(&appointments).Error
+	return appointments, total, err
+}
+
+// GetDailyByBarberID returns all appointments for a barber on a specific date
+// Returns all statuses (pending, approved, rejected, completed)
+func (r *appointmentRepository) GetDailyByBarberID(barberID uint, date time.Time) ([]models.Appointment, error) {
+	var appointments []models.Appointment
+
+	// Günün başlangıcı ve sonu
+	startOfDay := time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, time.UTC)
+	endOfDay := startOfDay.Add(24 * time.Hour)
+
+	err := r.db.Model(&models.Appointment{}).
+		Where("barber_id = ? AND appointment_time >= ? AND appointment_time < ?", barberID, startOfDay, endOfDay).
+		Preload("User").Preload("Barber").Preload("Barber.Shops").Preload("Services").
+		Order("appointment_time ASC").
+		Find(&appointments).Error
+
+	return appointments, err
 }
