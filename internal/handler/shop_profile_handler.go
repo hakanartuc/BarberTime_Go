@@ -280,7 +280,7 @@ func (h *ShopProfileHandler) DeleteShopService(c *gin.Context) {
 // ==================== Closed Days ====================
 
 func (h *ShopProfileHandler) GetClosedDays(c *gin.Context) {
-	shopID, err := strconv.ParseUint(c.Param("shopId"), 10, 32)
+	shopID, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
 		utils.BadRequest(c, "Invalid shop ID")
 		return
@@ -302,7 +302,7 @@ type CreateClosedDayRequest struct {
 
 func (h *ShopProfileHandler) CreateClosedDay(c *gin.Context) {
 	userID, _ := c.Get("userID")
-	shopID, err := strconv.ParseUint(c.Param("shopId"), 10, 32)
+	shopID, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
 		utils.BadRequest(c, "Invalid shop ID")
 		return
@@ -330,13 +330,13 @@ type UpdateClosedDayRequest struct {
 
 func (h *ShopProfileHandler) UpdateClosedDay(c *gin.Context) {
 	userID, _ := c.Get("userID")
-	shopID, err := strconv.ParseUint(c.Param("shopId"), 10, 32)
+	shopID, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
 		utils.BadRequest(c, "Invalid shop ID")
 		return
 	}
 
-	closedDayID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	closedDayID, err := strconv.ParseUint(c.Param("closedDayId"), 10, 32)
 	if err != nil {
 		utils.BadRequest(c, "Invalid closed day ID")
 		return
@@ -359,13 +359,13 @@ func (h *ShopProfileHandler) UpdateClosedDay(c *gin.Context) {
 
 func (h *ShopProfileHandler) DeleteClosedDay(c *gin.Context) {
 	userID, _ := c.Get("userID")
-	shopID, err := strconv.ParseUint(c.Param("shopId"), 10, 32)
+	shopID, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
 		utils.BadRequest(c, "Invalid shop ID")
 		return
 	}
 
-	closedDayID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	closedDayID, err := strconv.ParseUint(c.Param("closedDayId"), 10, 32)
 	if err != nil {
 		utils.BadRequest(c, "Invalid closed day ID")
 		return
@@ -385,13 +385,13 @@ type ToggleClosedDayRequest struct {
 
 func (h *ShopProfileHandler) ToggleClosedDay(c *gin.Context) {
 	userID, _ := c.Get("userID")
-	shopID, err := strconv.ParseUint(c.Param("shopId"), 10, 32)
+	shopID, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
 		utils.BadRequest(c, "Invalid shop ID")
 		return
 	}
 
-	closedDayID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	closedDayID, err := strconv.ParseUint(c.Param("closedDayId"), 10, 32)
 	if err != nil {
 		utils.BadRequest(c, "Invalid closed day ID")
 		return
@@ -415,7 +415,7 @@ func (h *ShopProfileHandler) ToggleClosedDay(c *gin.Context) {
 // ==================== Working Hours ====================
 
 func (h *ShopProfileHandler) GetWorkingHours(c *gin.Context) {
-	shopID, err := strconv.ParseUint(c.Param("shopId"), 10, 32)
+	shopID, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
 		utils.BadRequest(c, "Invalid shop ID")
 		return
@@ -437,7 +437,7 @@ type UpdateWorkingHoursRequest struct {
 
 func (h *ShopProfileHandler) UpdateWorkingHours(c *gin.Context) {
 	userID, _ := c.Get("userID")
-	shopID, err := strconv.ParseUint(c.Param("shopId"), 10, 32)
+	shopID, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
 		utils.BadRequest(c, "Invalid shop ID")
 		return
@@ -466,7 +466,7 @@ type UpdateShopSystemStatusRequest struct {
 
 func (h *ShopProfileHandler) UpdateSystemStatus(c *gin.Context) {
 	userID, _ := c.Get("userID")
-	shopID, err := strconv.ParseUint(c.Param("shopId"), 10, 32)
+	shopID, err := strconv.ParseUint(c.Param("id"), 10, 32)
 	if err != nil {
 		utils.BadRequest(c, "Invalid shop ID")
 		return

@@ -218,18 +218,18 @@ func main() {
 			shopProfile.DELETE("/:id/services/:serviceId", shopProfileHandler.DeleteShopService)
 
 			// Closed Days routes
-			shopProfile.GET("/:shopId/closed-days", shopProfileHandler.GetClosedDays)
-			shopProfile.POST("/:shopId/closed-days", shopProfileHandler.CreateClosedDay)
-			shopProfile.PATCH("/:shopId/closed-days/:id", shopProfileHandler.UpdateClosedDay)
-			shopProfile.DELETE("/:shopId/closed-days/:id", shopProfileHandler.DeleteClosedDay)
-			shopProfile.PATCH("/:shopId/closed-days/:id/toggle", shopProfileHandler.ToggleClosedDay)
+			shopProfile.GET("/:id/closed-days", shopProfileHandler.GetClosedDays)
+			shopProfile.POST("/:id/closed-days", shopProfileHandler.CreateClosedDay)
+			shopProfile.PATCH("/:id/closed-days/:closedDayId", shopProfileHandler.UpdateClosedDay)
+			shopProfile.DELETE("/:id/closed-days/:closedDayId", shopProfileHandler.DeleteClosedDay)
+			shopProfile.PATCH("/:id/closed-days/:closedDayId/toggle", shopProfileHandler.ToggleClosedDay)
 
 			// Working Hours routes
-			shopProfile.GET("/:shopId/working-hours", shopProfileHandler.GetWorkingHours)
-			shopProfile.PATCH("/:shopId/working-hours", shopProfileHandler.UpdateWorkingHours)
+			shopProfile.GET("/:id/working-hours", shopProfileHandler.GetWorkingHours)
+			shopProfile.PATCH("/:id/working-hours", shopProfileHandler.UpdateWorkingHours)
 
 			// System Status route
-			shopProfile.PATCH("/:shopId/system-status", shopProfileHandler.UpdateSystemStatus)
+			shopProfile.PATCH("/:id/system-status", shopProfileHandler.UpdateSystemStatus)
 		}
 
 		// Barber Shop Request routes
