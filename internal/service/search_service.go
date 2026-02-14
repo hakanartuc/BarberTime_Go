@@ -416,9 +416,14 @@ func (s *searchService) parseShopResults(esResult map[string]interface{}) []mode
 			shop.Website = website
 		}
 
-		// WorkingHours
-		if wh, ok := source["workingHours"].(string); ok {
-			shop.WorkingHours = wh
+		// OpenTime
+		if ot, ok := source["openTime"].(string); ok {
+			shop.OpenTime = ot
+		}
+
+		// CloseTime
+		if ct, ok := source["closeTime"].(string); ok {
+			shop.CloseTime = ct
 		}
 
 		// ClosedDays
@@ -506,6 +511,38 @@ func (s *searchService) parseShopResults(esResult map[string]interface{}) []mode
 				}
 			}
 			shop.ShopServices = shopServices
+		}
+
+		// Barbers bilgilerini Elasticsearch'ten parse et
+		if barbersList, ok := source["barbers"].([]interface{}); ok {
+			var barbers []models.Barber
+			for _, barberItem := range barbersList {
+				if barberMap, ok := barberItem.(map[string]interface{}); ok {
+					barber := models.Barber{}
+					if idFloat, ok := barberMap["id"].(float64); ok {
+						barber.ID = uint(idFloat)
+					}
+					if name, ok := barberMap["name"].(string); ok {
+						barber.Name = name
+					}
+					if username, ok := barberMap["username"].(string); ok {
+						barber.Username = username
+					}
+					if avatar, ok := barberMap["avatar"].(string); ok {
+						barber.Avatar = &avatar
+					}
+					if ratingMap, ok := barberMap["rating"].(map[string]interface{}); ok {
+						if avg, ok := ratingMap["average"].(float64); ok {
+							barber.Rating.Average = avg
+						}
+						if total, ok := ratingMap["totalReview"].(float64); ok {
+							barber.Rating.TotalReview = int(total)
+						}
+					}
+					barbers = append(barbers, barber)
+				}
+			}
+			shop.Barbers = barbers
 		}
 
 		shops = append(shops, shop)
@@ -870,8 +907,11 @@ func (s *searchService) IndexShop(shop *models.Shop) error {
 				"banner": map[string]interface{}{
 					"type": "keyword",
 				},
-				"workingHours": map[string]interface{}{
-					"type": "text",
+				"openTime": map[string]interface{}{
+					"type": "keyword",
+				},
+				"closeTime": map[string]interface{}{
+					"type": "keyword",
 				},
 				"closedDays": map[string]interface{}{
 					"type": "text",
@@ -928,6 +968,33 @@ func (s *searchService) IndexShop(shop *models.Shop) error {
 						},
 					},
 				},
+				"barbers": map[string]interface{}{
+					"type": "nested",
+					"properties": map[string]interface{}{
+						"id": map[string]interface{}{
+							"type": "long",
+						},
+						"name": map[string]interface{}{
+							"type": "keyword",
+						},
+						"username": map[string]interface{}{
+							"type": "keyword",
+						},
+						"avatar": map[string]interface{}{
+							"type": "keyword",
+						},
+						"rating": map[string]interface{}{
+							"properties": map[string]interface{}{
+								"average": map[string]interface{}{
+									"type": "float",
+								},
+								"totalReview": map[string]interface{}{
+									"type": "integer",
+								},
+							},
+						},
+					},
+				},
 			},
 		},
 	}
@@ -979,6 +1046,30 @@ func (s *searchService) IndexShop(shop *models.Shop) error {
 		ownersDoc = append(ownersDoc, ownerDoc)
 	}
 
+	// Barber bilgilerini al
+	barbers, err := s.barberRepo.GetByShopID(shop.ID)
+	if err != nil {
+		log.Printf("Warning: Failed to get barbers for shop %d: %v", shop.ID, err)
+	}
+
+	// Barbers listesi (nested objects)
+	var barbersDoc []map[string]interface{}
+	for _, barber := range barbers {
+		barberDoc := map[string]interface{}{
+			"id":       barber.ID,
+			"name":     barber.Name,
+			"username": barber.Username,
+			"rating": map[string]interface{}{
+				"average":     barber.Rating.Average,
+				"totalReview": barber.Rating.TotalReview,
+			},
+		}
+		if barber.Avatar != nil {
+			barberDoc["avatar"] = *barber.Avatar
+		}
+		barbersDoc = append(barbersDoc, barberDoc)
+	}
+
 	// Document oluştur
 	doc := map[string]interface{}{
 		"id":          shop.ID,
@@ -994,14 +1085,19 @@ func (s *searchService) IndexShop(shop *models.Shop) error {
 		},
 		"shopServices": shopServicesDoc,
 		"owners":       ownersDoc,
+		"barbers":      barbersDoc,
 	}
 
 	if shop.Location.Address != "" {
 		doc["address"] = shop.Location.Address
 	}
 
-	if shop.WorkingHours != "" {
-		doc["workingHours"] = shop.WorkingHours
+	if shop.OpenTime != "" {
+		doc["openTime"] = shop.OpenTime
+	}
+
+	if shop.CloseTime != "" {
+		doc["closeTime"] = shop.CloseTime
 	}
 
 	if shop.ClosedDays != "" {

@@ -20,15 +20,16 @@ func NewShopProfileHandler(shopProfileService service.ShopProfileService) *ShopP
 }
 
 type CreateShopRequest struct {
-	Name         string  `json:"name" binding:"required"`
-	Description  string  `json:"description"`
-	PhoneNumber  string  `json:"phoneNumber"`
-	Email        string  `json:"email"`
-	Website      string  `json:"website"`
-	Latitude     float64 `json:"latitude" binding:"required"`
-	Longitude    float64 `json:"longitude" binding:"required"`
-	WorkingHours string  `json:"workingHours"`
-	ClosedDays   string  `json:"closedDays"`
+	Name        string  `json:"name" binding:"required"`
+	Description string  `json:"description"`
+	PhoneNumber string  `json:"phoneNumber"`
+	Email       string  `json:"email"`
+	Website     string  `json:"website"`
+	Latitude    float64 `json:"latitude" binding:"required"`
+	Longitude   float64 `json:"longitude" binding:"required"`
+	OpenTime    string  `json:"openTime"`
+	CloseTime   string  `json:"closeTime"`
+	ClosedDays  string  `json:"closedDays"`
 }
 
 func (h *ShopProfileHandler) CreateShop(c *gin.Context) {
@@ -48,7 +49,8 @@ func (h *ShopProfileHandler) CreateShop(c *gin.Context) {
 		req.Website,
 		req.Latitude,
 		req.Longitude,
-		req.WorkingHours,
+		req.OpenTime,
+		req.CloseTime,
 		req.ClosedDays,
 	)
 	if err != nil {
@@ -76,16 +78,17 @@ func (h *ShopProfileHandler) GetShopProfile(c *gin.Context) {
 }
 
 type UpdateShopProfileRequest struct {
-	Name         *string  `json:"name"`
-	Description  *string  `json:"description"`
-	Banner       *string  `json:"banner"`
-	PhoneNumber  *string  `json:"phoneNumber"`
-	Email        *string  `json:"email"`
-	Website      *string  `json:"website"`
-	WorkingHours *string  `json:"workingHours"`
-	ClosedDays   *string  `json:"closedDays"`
-	Latitude     *float64 `json:"latitude"`
-	Longitude    *float64 `json:"longitude"`
+	Name        *string  `json:"name"`
+	Description *string  `json:"description"`
+	Banner      *string  `json:"banner"`
+	PhoneNumber *string  `json:"phoneNumber"`
+	Email       *string  `json:"email"`
+	Website     *string  `json:"website"`
+	OpenTime    *string  `json:"openTime"`
+	CloseTime   *string  `json:"closeTime"`
+	ClosedDays  *string  `json:"closedDays"`
+	Latitude    *float64 `json:"latitude"`
+	Longitude   *float64 `json:"longitude"`
 }
 
 func (h *ShopProfileHandler) UpdateShopProfile(c *gin.Context) {
@@ -111,7 +114,8 @@ func (h *ShopProfileHandler) UpdateShopProfile(c *gin.Context) {
 		req.PhoneNumber,
 		req.Email,
 		req.Website,
-		req.WorkingHours,
+		req.OpenTime,
+		req.CloseTime,
 		req.ClosedDays,
 		req.Latitude,
 		req.Longitude,
@@ -296,8 +300,13 @@ func (h *ShopProfileHandler) GetClosedDays(c *gin.Context) {
 }
 
 type CreateClosedDayRequest struct {
-	Date   string `json:"date" binding:"required"`
-	Reason string `json:"reason"`
+	SpecificDate *string `json:"specificDate"`
+	DayOfWeek    *int    `json:"dayOfWeek"`
+	IsAllDay     bool    `json:"isAllDay"`
+	StartTime    *string `json:"startTime"`
+	EndTime      *string `json:"endTime"`
+	IsRecurring  bool    `json:"isRecurring"`
+	Reason       string  `json:"reason"`
 }
 
 func (h *ShopProfileHandler) CreateClosedDay(c *gin.Context) {
@@ -314,7 +323,7 @@ func (h *ShopProfileHandler) CreateClosedDay(c *gin.Context) {
 		return
 	}
 
-	closedDay, err := h.shopProfileService.CreateClosedDay(uint(shopID), userID.(uint), req.Date, req.Reason)
+	closedDay, err := h.shopProfileService.CreateClosedDay(uint(shopID), userID.(uint), req.SpecificDate, req.DayOfWeek, req.IsAllDay, req.StartTime, req.EndTime, req.IsRecurring, req.Reason)
 	if err != nil {
 		utils.BadRequest(c, err.Error())
 		return
@@ -324,8 +333,13 @@ func (h *ShopProfileHandler) CreateClosedDay(c *gin.Context) {
 }
 
 type UpdateClosedDayRequest struct {
-	Date   *string `json:"date"`
-	Reason *string `json:"reason"`
+	SpecificDate *string `json:"specificDate"`
+	DayOfWeek    *int    `json:"dayOfWeek"`
+	IsAllDay     *bool   `json:"isAllDay"`
+	StartTime    *string `json:"startTime"`
+	EndTime      *string `json:"endTime"`
+	IsRecurring  *bool   `json:"isRecurring"`
+	Reason       *string `json:"reason"`
 }
 
 func (h *ShopProfileHandler) UpdateClosedDay(c *gin.Context) {
@@ -348,7 +362,7 @@ func (h *ShopProfileHandler) UpdateClosedDay(c *gin.Context) {
 		return
 	}
 
-	closedDay, err := h.shopProfileService.UpdateClosedDay(uint(shopID), userID.(uint), uint(closedDayID), req.Date, req.Reason)
+	closedDay, err := h.shopProfileService.UpdateClosedDay(uint(shopID), userID.(uint), uint(closedDayID), req.SpecificDate, req.DayOfWeek, req.IsAllDay, req.StartTime, req.EndTime, req.IsRecurring, req.Reason)
 	if err != nil {
 		utils.BadRequest(c, err.Error())
 		return
@@ -485,4 +499,18 @@ func (h *ShopProfileHandler) UpdateSystemStatus(c *gin.Context) {
 	}
 
 	utils.SuccessResponse(c, http.StatusOK, shop)
+}
+
+// ==================== My Shops ====================
+
+func (h *ShopProfileHandler) GetMyShops(c *gin.Context) {
+	userID, _ := c.Get("userID")
+
+	shops, err := h.shopProfileService.GetMyShops(userID.(uint))
+	if err != nil {
+		utils.NotFound(c, err.Error())
+		return
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, shops)
 }

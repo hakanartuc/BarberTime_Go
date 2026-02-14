@@ -40,7 +40,7 @@ func (r *shopClosedDayRepository) GetByID(id uint) (*models.ShopClosedDay, error
 
 func (r *shopClosedDayRepository) GetByShopID(shopID uint) ([]models.ShopClosedDay, error) {
 	var closedDays []models.ShopClosedDay
-	err := r.db.Where("shop_id = ?", shopID).Order("date ASC").Find(&closedDays).Error
+	err := r.db.Where("shop_id = ?", shopID).Order("created_at DESC").Find(&closedDays).Error
 	return closedDays, err
 }
 

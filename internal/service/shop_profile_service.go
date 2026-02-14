@@ -9,9 +9,9 @@ import (
 )
 
 type ShopProfileService interface {
-	CreateShop(userID uint, name string, description string, phoneNumber string, email string, website string, latitude, longitude float64, workingHours, closedDays string) (*models.Shop, error)
+	CreateShop(userID uint, name string, description string, phoneNumber string, email string, website string, latitude, longitude float64, openTime, closeTime, closedDays string) (*models.Shop, error)
 	GetShopProfile(shopID uint) (*models.Shop, error)
-	UpdateShopProfile(shopID, userID uint, name *string, description *string, banner *string, phoneNumber *string, email *string, website *string, workingHours *string, closedDays *string, latitude, longitude *float64) (*models.Shop, error)
+	UpdateShopProfile(shopID, userID uint, name *string, description *string, banner *string, phoneNumber *string, email *string, website *string, openTime *string, closeTime *string, closedDays *string, latitude, longitude *float64) (*models.Shop, error)
 	AddShopOwner(shopID, ownerUserID, requesterUserID uint) error
 	RemoveShopOwner(shopID, ownerUserID, requesterUserID uint) error
 	GetShopOwners(shopID uint) ([]models.User, error)
@@ -21,8 +21,8 @@ type ShopProfileService interface {
 
 	// Closed Days
 	GetClosedDays(shopID uint) ([]models.ShopClosedDay, error)
-	CreateClosedDay(shopID, userID uint, date, reason string) (*models.ShopClosedDay, error)
-	UpdateClosedDay(shopID, userID, closedDayID uint, date, reason *string) (*models.ShopClosedDay, error)
+	CreateClosedDay(shopID, userID uint, specificDate *string, dayOfWeek *int, isAllDay bool, startTime, endTime *string, isRecurring bool, reason string) (*models.ShopClosedDay, error)
+	UpdateClosedDay(shopID, userID, closedDayID uint, specificDate *string, dayOfWeek *int, isAllDay *bool, startTime, endTime *string, isRecurring *bool, reason *string) (*models.ShopClosedDay, error)
 	DeleteClosedDay(shopID, userID, closedDayID uint) error
 	ToggleClosedDay(shopID, userID, closedDayID uint, isActive bool) (*models.ShopClosedDay, error)
 
@@ -32,19 +32,22 @@ type ShopProfileService interface {
 
 	// System Status
 	UpdateSystemStatus(shopID, userID uint, isSystemOff bool) (*models.Shop, error)
+
+	// My Shops
+	GetMyShops(userID uint) ([]models.Shop, error)
 }
 
 type shopProfileService struct {
-	shopRepo             repository.ShopRepository
-	userRepo             repository.UserRepository
-	barberRepo           repository.BarberRepository
-	barberShopRepo       repository.BarberShopRepository
-	shopServiceRepo      repository.ShopServiceRepository
-	serviceRepo          repository.ServiceRepository
-	closedDayRepo        repository.ShopClosedDayRepository
-	workingHoursRepo     repository.ShopWorkingHoursRepository
-	cacheService         CacheService
-	messageService       MessageService
+	shopRepo         repository.ShopRepository
+	userRepo         repository.UserRepository
+	barberRepo       repository.BarberRepository
+	barberShopRepo   repository.BarberShopRepository
+	shopServiceRepo  repository.ShopServiceRepository
+	serviceRepo      repository.ServiceRepository
+	closedDayRepo    repository.ShopClosedDayRepository
+	workingHoursRepo repository.ShopWorkingHoursRepository
+	cacheService     CacheService
+	messageService   MessageService
 }
 
 func NewShopProfileService(
@@ -60,20 +63,20 @@ func NewShopProfileService(
 	messageService MessageService,
 ) ShopProfileService {
 	return &shopProfileService{
-		shopRepo:             shopRepo,
-		userRepo:             userRepo,
-		barberRepo:           barberRepo,
-		barberShopRepo:       barberShopRepo,
-		shopServiceRepo:      shopServiceRepo,
-		serviceRepo:          serviceRepo,
-		closedDayRepo:        closedDayRepo,
-		workingHoursRepo:     workingHoursRepo,
-		cacheService:         cacheService,
-		messageService:       messageService,
+		shopRepo:         shopRepo,
+		userRepo:         userRepo,
+		barberRepo:       barberRepo,
+		barberShopRepo:   barberShopRepo,
+		shopServiceRepo:  shopServiceRepo,
+		serviceRepo:      serviceRepo,
+		closedDayRepo:    closedDayRepo,
+		workingHoursRepo: workingHoursRepo,
+		cacheService:     cacheService,
+		messageService:   messageService,
 	}
 }
 
-func (s *shopProfileService) CreateShop(userID uint, name string, description string, phoneNumber string, email string, website string, latitude, longitude float64, workingHours, closedDays string) (*models.Shop, error) {
+func (s *shopProfileService) CreateShop(userID uint, name string, description string, phoneNumber string, email string, website string, latitude, longitude float64, openTime, closeTime, closedDays string) (*models.Shop, error) {
 	// Kullanıcı kontrolü
 	_, err := s.userRepo.GetByID(userID)
 	if err != nil {
@@ -90,9 +93,10 @@ func (s *shopProfileService) CreateShop(userID uint, name string, description st
 			Latitude:  latitude,
 			Longitude: longitude,
 		},
-		WorkingHours: workingHours,
-		ClosedDays:   closedDays,
-		Status:       models.ShopStatusPending,
+		OpenTime:   openTime,
+		CloseTime:  closeTime,
+		ClosedDays: closedDays,
+		Status:     models.ShopStatusPending,
 	}
 
 	if err := s.shopRepo.Create(shop); err != nil {
@@ -131,6 +135,10 @@ func (s *shopProfileService) CreateShop(userID uint, name string, description st
 	cacheKey := fmt.Sprintf("shop:%d", createdShop.ID)
 	s.cacheService.Set(cacheKey, createdShop, 1*time.Hour)
 
+	// my-shops cache'ini temizle (yeni shop eklendi)
+	myShopsCacheKey := fmt.Sprintf("my-shops:%d", userID)
+	s.cacheService.Delete(myShopsCacheKey)
+
 	// 3. RabbitMQ ile event mesajı gönder
 	s.messageService.PublishShopCreated(createdShop.ID)
 
@@ -163,7 +171,7 @@ func (s *shopProfileService) GetShopProfile(shopID uint) (*models.Shop, error) {
 	return shop, nil
 }
 
-func (s *shopProfileService) UpdateShopProfile(shopID, userID uint, name *string, description *string, banner *string, phoneNumber *string, email *string, website *string, workingHours *string, closedDays *string, latitude, longitude *float64) (*models.Shop, error) {
+func (s *shopProfileService) UpdateShopProfile(shopID, userID uint, name *string, description *string, banner *string, phoneNumber *string, email *string, website *string, openTime *string, closeTime *string, closedDays *string, latitude, longitude *float64) (*models.Shop, error) {
 	// Owner kontrolü
 	isOwner, err := s.barberShopRepo.IsOwner(shopID, userID)
 	if err != nil {
@@ -196,8 +204,11 @@ func (s *shopProfileService) UpdateShopProfile(shopID, userID uint, name *string
 	if website != nil {
 		shop.Website = *website
 	}
-	if workingHours != nil {
-		shop.WorkingHours = *workingHours
+	if openTime != nil {
+		shop.OpenTime = *openTime
+	}
+	if closeTime != nil {
+		shop.CloseTime = *closeTime
 	}
 	if closedDays != nil {
 		shop.ClosedDays = *closedDays
@@ -259,13 +270,25 @@ func (s *shopProfileService) AddShopOwner(shopID, ownerUserID, requesterUserID u
 			Status:   models.BarberShopStatusApproved,
 			IsOwner:  true,
 		}
-		return s.barberShopRepo.Create(barberShop)
+		if err := s.barberShopRepo.Create(barberShop); err != nil {
+			return err
+		}
+		// my-shops cache'ini temizle
+		myShopsCacheKey := fmt.Sprintf("my-shops:%d", ownerUserID)
+		s.cacheService.Delete(myShopsCacheKey)
+		return nil
 	}
 
 	// Mevcut kaydı güncelle
 	barberShop.IsOwner = true
 	barberShop.Status = models.BarberShopStatusApproved
-	return s.barberShopRepo.Update(barberShop)
+	if err := s.barberShopRepo.Update(barberShop); err != nil {
+		return err
+	}
+	// my-shops cache'ini temizle
+	myShopsCacheKey := fmt.Sprintf("my-shops:%d", ownerUserID)
+	s.cacheService.Delete(myShopsCacheKey)
+	return nil
 }
 
 func (s *shopProfileService) RemoveShopOwner(shopID, ownerUserID, requesterUserID uint) error {
@@ -291,7 +314,13 @@ func (s *shopProfileService) RemoveShopOwner(shopID, ownerUserID, requesterUserI
 	}
 
 	barberShop.IsOwner = false
-	return s.barberShopRepo.Update(barberShop)
+	if err := s.barberShopRepo.Update(barberShop); err != nil {
+		return err
+	}
+	// my-shops cache'ini temizle
+	myShopsCacheKey := fmt.Sprintf("my-shops:%d", ownerUserID)
+	s.cacheService.Delete(myShopsCacheKey)
+	return nil
 }
 
 func (s *shopProfileService) GetShopOwners(shopID uint) ([]models.User, error) {
@@ -418,7 +447,7 @@ func (s *shopProfileService) GetClosedDays(shopID uint) ([]models.ShopClosedDay,
 	return s.closedDayRepo.GetByShopID(shopID)
 }
 
-func (s *shopProfileService) CreateClosedDay(shopID, userID uint, date, reason string) (*models.ShopClosedDay, error) {
+func (s *shopProfileService) CreateClosedDay(shopID, userID uint, specificDate *string, dayOfWeek *int, isAllDay bool, startTime, endTime *string, isRecurring bool, reason string) (*models.ShopClosedDay, error) {
 	// Owner kontrolü
 	isOwner, err := s.barberShopRepo.IsOwner(shopID, userID)
 	if err != nil {
@@ -428,17 +457,43 @@ func (s *shopProfileService) CreateClosedDay(shopID, userID uint, date, reason s
 		return nil, errors.New("only shop owners can add closed days")
 	}
 
-	// Tarih parse et
-	parsedDate, err := time.Parse("2006-01-02", date)
-	if err != nil {
-		return nil, errors.New("invalid date format, use YYYY-MM-DD")
+	// Validasyon
+	if specificDate != nil && dayOfWeek != nil {
+		return nil, errors.New("specificDate and dayOfWeek cannot be set together")
+	}
+	if specificDate == nil && dayOfWeek == nil {
+		return nil, errors.New("either specificDate or dayOfWeek is required")
+	}
+	if dayOfWeek != nil {
+		if *dayOfWeek < 0 || *dayOfWeek > 6 {
+			return nil, errors.New("dayOfWeek must be between 0 (Sunday) and 6 (Saturday)")
+		}
+		if !isRecurring {
+			return nil, errors.New("isRecurring must be true when dayOfWeek is set")
+		}
+	}
+	if !isAllDay && (startTime == nil || endTime == nil) {
+		return nil, errors.New("startTime and endTime are required when isAllDay is false")
 	}
 
 	closedDay := &models.ShopClosedDay{
-		ShopID:   shopID,
-		Date:     parsedDate,
-		Reason:   reason,
-		IsActive: true,
+		ShopID:      shopID,
+		DayOfWeek:   dayOfWeek,
+		IsAllDay:    isAllDay,
+		StartTime:   startTime,
+		EndTime:     endTime,
+		IsRecurring: isRecurring,
+		Reason:      reason,
+		IsActive:    true,
+	}
+
+	// specificDate parse et
+	if specificDate != nil {
+		parsedDate, err := time.Parse("2006-01-02", *specificDate)
+		if err != nil {
+			return nil, errors.New("invalid specificDate format, use YYYY-MM-DD")
+		}
+		closedDay.SpecificDate = &parsedDate
 	}
 
 	if err := s.closedDayRepo.Create(closedDay); err != nil {
@@ -452,7 +507,7 @@ func (s *shopProfileService) CreateClosedDay(shopID, userID uint, date, reason s
 	return closedDay, nil
 }
 
-func (s *shopProfileService) UpdateClosedDay(shopID, userID, closedDayID uint, date, reason *string) (*models.ShopClosedDay, error) {
+func (s *shopProfileService) UpdateClosedDay(shopID, userID, closedDayID uint, specificDate *string, dayOfWeek *int, isAllDay *bool, startTime, endTime *string, isRecurring *bool, reason *string) (*models.ShopClosedDay, error) {
 	// Owner kontrolü
 	isOwner, err := s.barberShopRepo.IsOwner(shopID, userID)
 	if err != nil {
@@ -471,16 +526,55 @@ func (s *shopProfileService) UpdateClosedDay(shopID, userID, closedDayID uint, d
 		return nil, errors.New("closed day does not belong to this shop")
 	}
 
-	if date != nil {
-		parsedDate, err := time.Parse("2006-01-02", *date)
+	if specificDate != nil {
+		parsedDate, err := time.Parse("2006-01-02", *specificDate)
 		if err != nil {
-			return nil, errors.New("invalid date format, use YYYY-MM-DD")
+			return nil, errors.New("invalid specificDate format, use YYYY-MM-DD")
 		}
-		closedDay.Date = parsedDate
+		closedDay.SpecificDate = &parsedDate
+		closedDay.DayOfWeek = nil // specificDate varsa dayOfWeek null olmalı
+	}
+
+	if dayOfWeek != nil {
+		if *dayOfWeek < 0 || *dayOfWeek > 6 {
+			return nil, errors.New("dayOfWeek must be between 0 (Sunday) and 6 (Saturday)")
+		}
+		closedDay.DayOfWeek = dayOfWeek
+		closedDay.SpecificDate = nil // dayOfWeek varsa specificDate null olmalı
+	}
+
+	if isAllDay != nil {
+		closedDay.IsAllDay = *isAllDay
+	}
+
+	if startTime != nil {
+		closedDay.StartTime = startTime
+	}
+
+	if endTime != nil {
+		closedDay.EndTime = endTime
+	}
+
+	if isRecurring != nil {
+		closedDay.IsRecurring = *isRecurring
 	}
 
 	if reason != nil {
 		closedDay.Reason = *reason
+	}
+
+	// Post-update validasyon
+	if closedDay.SpecificDate != nil && closedDay.DayOfWeek != nil {
+		return nil, errors.New("specificDate and dayOfWeek cannot be set together")
+	}
+	if closedDay.SpecificDate == nil && closedDay.DayOfWeek == nil {
+		return nil, errors.New("either specificDate or dayOfWeek is required")
+	}
+	if closedDay.DayOfWeek != nil && !closedDay.IsRecurring {
+		return nil, errors.New("isRecurring must be true when dayOfWeek is set")
+	}
+	if !closedDay.IsAllDay && (closedDay.StartTime == nil || closedDay.EndTime == nil) {
+		return nil, errors.New("startTime and endTime are required when isAllDay is false")
 	}
 
 	if err := s.closedDayRepo.Update(closedDay); err != nil {
@@ -680,4 +774,34 @@ func (s *shopProfileService) UpdateSystemStatus(shopID, userID uint, isSystemOff
 	s.messageService.PublishShopUpdated(updatedShop.ID)
 
 	return updatedShop, nil
+}
+
+// ==================== My Shops ====================
+
+func (s *shopProfileService) GetMyShops(userID uint) ([]models.Shop, error) {
+	// Önce cache'den kontrol et
+	cacheKey := fmt.Sprintf("my-shops:%d", userID)
+	var cachedShops []models.Shop
+	if err := s.cacheService.Get(cacheKey, &cachedShops); err == nil {
+		return cachedShops, nil
+	}
+
+	// Cache'de yoksa DB'den al
+	shops, err := s.barberShopRepo.GetOwnedShopsByUserID(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Her shop için owner'ları al
+	for i := range shops {
+		owners, err := s.barberShopRepo.GetOwners(shops[i].ID)
+		if err == nil {
+			shops[i].Owners = owners
+		}
+	}
+
+	// Cache'e kaydet (1 saat)
+	s.cacheService.Set(cacheKey, shops, 1*time.Hour)
+
+	return shops, nil
 }

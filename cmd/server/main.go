@@ -193,6 +193,9 @@ func main() {
 			barberProfile.POST("/appointments/:id/approve", appointmentHandler.ApproveAppointment)
 			barberProfile.POST("/appointments/:id/reject", appointmentHandler.RejectAppointment)
 			barberProfile.POST("/appointments/:id/complete", appointmentHandler.CompleteAppointment)
+
+			// My Shops
+			barberProfile.GET("/shops", shopProfileHandler.GetMyShops)
 		}
 
 		// Shop routes

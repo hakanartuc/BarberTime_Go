@@ -23,7 +23,8 @@ type Shop struct {
 	Email        string         `json:"email"`
 	Website      string         `json:"website"`
 	Location     Location       `gorm:"embedded;embeddedPrefix:location_" json:"location"`
-	WorkingHours string         `gorm:"type:text" json:"workingHours"`                    // JSON formatında saklanacak
+	OpenTime     string         `gorm:"type:varchar(5)" json:"openTime"`                  // Açılış saati (HH:MM)
+	CloseTime    string         `gorm:"type:varchar(5)" json:"closeTime"`                 // Kapanış saati (HH:MM)
 	ClosedDays   string         `gorm:"type:text" json:"closedDays"`                      // JSON formatında saklanacak
 	IsSystemOff  bool           `gorm:"default:false" json:"isSystemOff"`                 // Randevu sistemi kapalı mı (tatil modu)
 	Status       ShopStatus     `gorm:"type:varchar(20);default:'pending'" json:"status"` // pending, confirmed, rejected

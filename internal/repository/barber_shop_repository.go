@@ -16,6 +16,7 @@ type BarberShopRepository interface {
 	GetByBarberAndShop(barberID, shopID uint) (*models.BarberShop, error)
 	IsOwner(shopID, userID uint) (bool, error)
 	GetOwners(shopID uint) ([]models.User, error)
+	GetOwnedShopsByUserID(userID uint) ([]models.Shop, error)
 	Update(barberShop *models.BarberShop) error
 	Delete(id uint) error
 }
@@ -107,4 +108,14 @@ func (r *barberShopRepository) GetOwners(shopID uint) ([]models.User, error) {
 		Where("barber_shops.shop_id = ? AND barber_shops.is_owner = ?", shopID, true).
 		Find(&users).Error
 	return users, err
+}
+
+func (r *barberShopRepository) GetOwnedShopsByUserID(userID uint) ([]models.Shop, error) {
+	var shops []models.Shop
+	err := r.db.Model(&models.Shop{}).
+		Joins("JOIN barber_shops ON shops.id = barber_shops.shop_id").
+		Joins("JOIN barbers ON barber_shops.barber_id = barbers.id").
+		Where("barbers.user_id = ? AND barber_shops.is_owner = ?", userID, true).
+		Find(&shops).Error
+	return shops, err
 }

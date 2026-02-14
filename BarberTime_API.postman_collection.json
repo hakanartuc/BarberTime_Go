@@ -16,8 +16,12 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/health",
-							"host": ["{{baseUrl}}"],
-							"path": ["health"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"health"
+							]
 						},
 						"description": "Sistem sağlık kontrolü. PostgreSQL bağlantısını kontrol eder."
 					}
@@ -29,8 +33,13 @@
 						"header": [],
 						"url": {
 							"raw": "{{baseUrl}}/api/health",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "health"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"health"
+							]
 						},
 						"description": "Sistem sağlık kontrolü (API endpoint). PostgreSQL bağlantısını kontrol eder."
 					}
@@ -72,8 +81,14 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/auth/token",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "auth", "token"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"token"
+							]
 						},
 						"description": "Telefon numarası ve device ID ile token alır. Eğer telefon doğrulanmamışsa requiresVerification: true döner ve SMS kodu gönderilir."
 					}
@@ -110,8 +125,14 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/auth/verify-phone",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "auth", "verify-phone"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"verify-phone"
+							]
 						},
 						"description": "SMS ile gönderilen doğrulama kodunu kontrol eder. Kod doğruysa kullanıcının telefon numarası doğrulanır ve JWT token döner. Kod 10 dakika geçerlidir."
 					}
@@ -133,8 +154,14 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/user/profile",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "user", "profile"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"user",
+								"profile"
+							]
 						}
 					}
 				},
@@ -158,8 +185,14 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/user/profile",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "user", "profile"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"user",
+								"profile"
+							]
 						}
 					}
 				},
@@ -185,8 +218,14 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/user/avatar",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "user", "avatar"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"user",
+								"avatar"
+							]
 						}
 					}
 				},
@@ -202,8 +241,14 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/user/avatar",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "user", "avatar"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"user",
+								"avatar"
+							]
 						}
 					}
 				}
@@ -224,8 +269,14 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/appointments/past?page=1&limit=10",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "appointments", "past"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"appointments",
+								"past"
+							],
 							"query": [
 								{
 									"key": "page",
@@ -251,8 +302,14 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/appointments/upcoming?page=1&limit=10",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "appointments", "upcoming"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"appointments",
+								"upcoming"
+							],
 							"query": [
 								{
 									"key": "page",
@@ -278,8 +335,14 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/appointments/1",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "appointments", "1"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"appointments",
+								"1"
+							]
 						}
 					}
 				},
@@ -303,8 +366,13 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/appointments",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "appointments"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"appointments"
+							]
 						},
 						"description": "Yeni randevu oluşturur. appointmentTime ISO 8601 formatında UTC olarak gönderilir (örn: 2025-12-15T14:00:00Z)"
 					}
@@ -321,8 +389,14 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/appointments/1",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "appointments", "1"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"appointments",
+								"1"
+							]
 						}
 					}
 				}
@@ -343,8 +417,14 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/barbers/nearby?latitude=41.0082&longitude=28.9784&page=1&limit=10",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "barbers", "nearby"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"barbers",
+								"nearby"
+							],
 							"query": [
 								{
 									"key": "latitude",
@@ -378,8 +458,14 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/barbers/1",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "barbers", "1"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"barbers",
+								"1"
+							]
 						}
 					}
 				},
@@ -395,8 +481,15 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/barbers/1/availability?startDate=2025-12-10&endDate=2025-12-17",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "barbers", "1", "availability"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"barbers",
+								"1",
+								"availability"
+							],
 							"query": [
 								{
 									"key": "startDate",
@@ -427,8 +520,14 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/shops/nearby?latitude=41.0082&longitude=28.9784&page=1&limit=10",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "shops", "nearby"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"shops",
+								"nearby"
+							],
 							"query": [
 								{
 									"key": "latitude",
@@ -462,8 +561,14 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/shops/1",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "shops", "1"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"shops",
+								"1"
+							]
 						}
 					}
 				},
@@ -479,8 +584,15 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/shops/1/barbers",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "shops", "1", "barbers"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"shops",
+								"1",
+								"barbers"
+							]
 						}
 					}
 				},
@@ -496,8 +608,15 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/shops/1/reviews?page=1&limit=10",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "shops", "1", "reviews"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"shops",
+								"1",
+								"reviews"
+							],
 							"query": [
 								{
 									"key": "page",
@@ -528,8 +647,13 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/favorites?type=shop",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "favorites"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"favorites"
+							],
 							"query": [
 								{
 									"key": "type",
@@ -552,8 +676,14 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/favorites/shops",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "favorites", "shops"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"favorites",
+								"shops"
+							]
 						}
 					}
 				},
@@ -569,8 +699,14 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/favorites/barbers",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "favorites", "barbers"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"favorites",
+								"barbers"
+							]
 						}
 					}
 				},
@@ -586,8 +722,15 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/favorites/shops/1",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "favorites", "shops", "1"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"favorites",
+								"shops",
+								"1"
+							]
 						}
 					}
 				},
@@ -603,8 +746,15 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/favorites/shops/1",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "favorites", "shops", "1"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"favorites",
+								"shops",
+								"1"
+							]
 						}
 					}
 				},
@@ -620,8 +770,15 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/favorites/barbers/1",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "favorites", "barbers", "1"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"favorites",
+								"barbers",
+								"1"
+							]
 						}
 					}
 				},
@@ -637,8 +794,15 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/favorites/barbers/1",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "favorites", "barbers", "1"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"favorites",
+								"barbers",
+								"1"
+							]
 						}
 					}
 				}
@@ -659,8 +823,13 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/reviews?type=shop&targetId=1&page=1&limit=10",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "reviews"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"reviews"
+							],
 							"query": [
 								{
 									"key": "type",
@@ -703,8 +872,13 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/reviews",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "reviews"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"reviews"
+							]
 						}
 					}
 				},
@@ -720,8 +894,14 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/reviews/1",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "reviews", "1"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"reviews",
+								"1"
+							]
 						}
 					}
 				}
@@ -742,8 +922,13 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/services",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "services"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"services"
+							]
 						},
 						"description": "Tüm servisleri listeler (sadece name bilgisi - admin tarafından yönetilir)"
 					}
@@ -760,8 +945,15 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/service/shop/1",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "service", "shop", "1"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"service",
+								"shop",
+								"1"
+							]
 						},
 						"description": "Shop'un servislerini getirir (ShopService listesi - duration, price, description bilgileri ile)"
 					}
@@ -791,8 +983,14 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/barber/register",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "barber", "register"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"barber",
+								"register"
+							]
 						},
 						"description": "User'ı barber olarak kaydeder. Username otomatik oluşturulur (isim + random sayı, örn: mehmet_berber4527)"
 					}
@@ -809,8 +1007,14 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/barber/profile",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "barber", "profile"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"barber",
+								"profile"
+							]
 						},
 						"description": "Barber'ın kendi profilini getirir (username, avatar ve diğer bilgiler dahil)"
 					}
@@ -835,8 +1039,14 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/barber/profile",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "barber", "profile"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"barber",
+								"profile"
+							]
 						},
 						"description": "Barber'ın kendi profilini günceller. Username değiştirilebilir (unique olmalı)"
 					}
@@ -853,8 +1063,14 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/barber/appointments?page=1&limit=20&startDate=2026-01-01&endDate=2026-12-31",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "barber", "appointments"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"barber",
+								"appointments"
+							],
 							"query": [
 								{
 									"key": "page",
@@ -891,8 +1107,15 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/barber/appointments/daily?date=2026-01-24",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "barber", "appointments", "daily"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"barber",
+								"appointments",
+								"daily"
+							],
 							"query": [
 								{
 									"key": "date",
@@ -916,8 +1139,15 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/barber/appointments/pending?page=1&limit=10",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "barber", "appointments", "pending"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"barber",
+								"appointments",
+								"pending"
+							],
 							"query": [
 								{
 									"key": "page",
@@ -944,8 +1174,15 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/barber/appointments/upcoming?page=1&limit=10",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "barber", "appointments", "upcoming"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"barber",
+								"appointments",
+								"upcoming"
+							],
 							"query": [
 								{
 									"key": "page",
@@ -972,8 +1209,15 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/barber/appointments/past?page=1&limit=10",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "barber", "appointments", "past"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"barber",
+								"appointments",
+								"past"
+							],
 							"query": [
 								{
 									"key": "page",
@@ -1000,8 +1244,16 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/barber/appointments/1/approve",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "barber", "appointments", "1", "approve"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"barber",
+								"appointments",
+								"1",
+								"approve"
+							]
 						},
 						"description": "Berber bekleyen bir randevuyu onaylar. Sadece 'pending' durumundaki randevular onaylanabilir."
 					}
@@ -1026,8 +1278,16 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/barber/appointments/1/reject",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "barber", "appointments", "1", "reject"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"barber",
+								"appointments",
+								"1",
+								"reject"
+							]
 						},
 						"description": "Berber bir randevuyu reddeder. 'pending' veya 'approved' durumundaki randevular reddedilebilir. reason alanı opsiyoneldir."
 					}
@@ -1044,8 +1304,16 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/barber/appointments/1/complete",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "barber", "appointments", "1", "complete"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"barber",
+								"appointments",
+								"1",
+								"complete"
+							]
 						},
 						"description": "Berber bir randevuyu tamamlandı olarak işaretler. Sadece 'approved' durumunda ve randevu zamanı geçmiş randevular tamamlanabilir."
 					}
@@ -1070,10 +1338,40 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/barber/system-status",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "barber", "system-status"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"barber",
+								"system-status"
+							]
 						},
 						"description": "Barber'ın randevu sistemini kapatır/açar (tatil modu). isSystemOff: true olduğunda randevu sistemi kapalıdır."
+					}
+				},
+				{
+					"name": "Get My Shops",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/barber/shops",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"barber",
+								"shops"
+							]
+						},
+						"description": "Giriş yapmış berberin/yöneticinin sahibi olduğu dükkanları listeler. Redis cache desteklidir (1 saat)."
 					}
 				}
 			]
@@ -1101,8 +1399,13 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/shop",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "shop"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"shop"
+							]
 						},
 						"description": "Yeni shop oluşturur. User'ın barber olması gerekir. Oluşturan otomatik owner olur (barber_shops tablosunda isOwner: true)"
 					}
@@ -1119,8 +1422,15 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/shop/profile/1",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "shop", "profile", "1"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"shop",
+								"profile",
+								"1"
+							]
 						},
 						"description": "Shop profilini getirir"
 					}
@@ -1145,8 +1455,15 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/shop/profile/1",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "shop", "profile", "1"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"shop",
+								"profile",
+								"1"
+							]
 						},
 						"description": "Shop profilini günceller (sadece owner)"
 					}
@@ -1163,8 +1480,15 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/shop/1/owners",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "shop", "1", "owners"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"shop",
+								"1",
+								"owners"
+							]
 						},
 						"description": "Shop owner'larını listeler"
 					}
@@ -1189,8 +1513,15 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/shop/1/owners",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "shop", "1", "owners"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"shop",
+								"1",
+								"owners"
+							]
 						},
 						"description": "Shop'a yeni owner ekler (sadece mevcut owner). Owner olacak user'ın barber olması gerekir. barber_shops tablosunda isOwner: true yapılır"
 					}
@@ -1207,8 +1538,16 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/shop/1/owners/2",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "shop", "1", "owners", "2"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"shop",
+								"1",
+								"owners",
+								"2"
+							]
 						},
 						"description": "Shop owner'ını çıkarır (sadece mevcut owner). barber_shops tablosunda isOwner: false yapılır"
 					}
@@ -1233,8 +1572,15 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/shop/1/services",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "shop", "1", "services"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"shop",
+								"1",
+								"services"
+							]
 						},
 						"description": "Shop'a yeni servis ekler (sadece owner). shop_services tablosuna kayıt oluşturur"
 					}
@@ -1259,8 +1605,16 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/shop/1/services/1",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "shop", "1", "services", "1"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"shop",
+								"1",
+								"services",
+								"1"
+							]
 						},
 						"description": "Shop servisini günceller (sadece owner). shop_services tablosunda duration, price, description güncellenir"
 					}
@@ -1277,8 +1631,16 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/shop/1/services/1",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "shop", "1", "services", "1"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"shop",
+								"1",
+								"services",
+								"1"
+							]
 						},
 						"description": "Shop servisini siler (sadece owner)"
 					}
@@ -1295,8 +1657,15 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/shop/1/closed-days",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "shop", "1", "closed-days"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"shop",
+								"1",
+								"closed-days"
+							]
 						},
 						"description": "Shop'un kapalı günlerini listeler"
 					}
@@ -1317,14 +1686,21 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"date\": \"2026-01-29\",\n    \"reason\": \"Resmi Tatil\"\n}"
+							"raw": "{\n    \"dayOfWeek\": 5,\n    \"isAllDay\": false,\n    \"startTime\": \"12:00\",\n    \"endTime\": \"14:00\",\n    \"isRecurring\": true,\n    \"reason\": \"Cuma Namazı Molası\"\n}"
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/shop/1/closed-days",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "shop", "1", "closed-days"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"shop",
+								"1",
+								"closed-days"
+							]
 						},
-						"description": "Shop'a kapalı gün ekler (sadece owner). date formatı: YYYY-MM-DD"
+						"description": "Shop'a kapalı gün/saat ekler (sadece owner). Senaryolar: 1) Özel tarih: specificDate + isAllDay:true 2) Tekrarlayan gün: dayOfWeek (0-6) + isRecurring:true 3) Saatlik: isAllDay:false + startTime/endTime"
 					}
 				},
 				{
@@ -1343,12 +1719,20 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"date\": \"2026-01-30\",\n    \"reason\": \"Yıllık İzin\"\n}"
+							"raw": "{\n    \"specificDate\": \"2026-01-01\",\n    \"isAllDay\": true,\n    \"isRecurring\": false,\n    \"reason\": \"Yılbaşı Tatili\"\n}"
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/shop/1/closed-days/1",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "shop", "1", "closed-days", "1"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"shop",
+								"1",
+								"closed-days",
+								"1"
+							]
 						},
 						"description": "Kapalı günü günceller (sadece owner). Tüm alanlar opsiyoneldir."
 					}
@@ -1365,8 +1749,16 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/shop/1/closed-days/1",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "shop", "1", "closed-days", "1"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"shop",
+								"1",
+								"closed-days",
+								"1"
+							]
 						},
 						"description": "Kapalı günü siler (sadece owner)"
 					}
@@ -1391,8 +1783,17 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/shop/1/closed-days/1/toggle",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "shop", "1", "closed-days", "1", "toggle"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"shop",
+								"1",
+								"closed-days",
+								"1",
+								"toggle"
+							]
 						},
 						"description": "Kapalı günün aktif/pasif durumunu değiştirir (sadece owner)"
 					}
@@ -1409,8 +1810,15 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/shop/1/working-hours",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "shop", "1", "working-hours"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"shop",
+								"1",
+								"working-hours"
+							]
 						},
 						"description": "Shop'un çalışma saatlerini getirir. Her gün için ayrı kayıt döner (0: Pazartesi, 6: Pazar)"
 					}
@@ -1435,8 +1843,15 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/shop/1/working-hours",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "shop", "1", "working-hours"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"shop",
+								"1",
+								"working-hours"
+							]
 						},
 						"description": "Shop'un çalışma saatlerini günceller (sadece owner). Tüm günler için aynı saatler uygulanır. Format: HH:MM"
 					}
@@ -1461,8 +1876,15 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/shop/1/system-status",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "shop", "1", "system-status"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"shop",
+								"1",
+								"system-status"
+							]
 						},
 						"description": "Shop'un randevu sistemini kapatır/açar (tatil modu). isSystemOff: true olduğunda randevu sistemi kapalıdır. Sadece shop owner'ları bu işlemi yapabilir."
 					}
@@ -1492,8 +1914,15 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/shops/1/barber-requests",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "shops", "1", "barber-requests"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"shops",
+								"1",
+								"barber-requests"
+							]
 						},
 						"description": "Barber shop'a başvuru yapar"
 					}
@@ -1510,8 +1939,15 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/shops/1/barber-requests",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "shops", "1", "barber-requests"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"shops",
+								"1",
+								"barber-requests"
+							]
 						},
 						"description": "Shop owner'ları için bekleyen başvuruları listeler"
 					}
@@ -1528,8 +1964,14 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/barber/requests",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "barber", "requests"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"barber",
+								"requests"
+							]
 						},
 						"description": "Barber'ın kendi başvurularını listeler"
 					}
@@ -1546,8 +1988,17 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/shops/1/barber-requests/1/approve",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "shops", "1", "barber-requests", "1", "approve"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"shops",
+								"1",
+								"barber-requests",
+								"1",
+								"approve"
+							]
 						},
 						"description": "Shop owner başvuruyu onaylar"
 					}
@@ -1572,8 +2023,17 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/shops/1/barber-requests/1/reject",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "shops", "1", "barber-requests", "1", "reject"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"shops",
+								"1",
+								"barber-requests",
+								"1",
+								"reject"
+							]
 						},
 						"description": "Shop owner başvuruyu reddeder"
 					}
@@ -1595,8 +2055,13 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/search?q=berber&type=all&latitude=41.0082&longitude=28.9784&service=Saç Kesimi&km=10&page=1&limit=10",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "search"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"search"
+							],
 							"query": [
 								{
 									"key": "q",
@@ -1658,8 +2123,15 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/admin/shops/pending?page=1&limit=10",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "admin", "shops", "pending"],
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"shops",
+								"pending"
+							],
 							"query": [
 								{
 									"key": "page",
@@ -1686,8 +2158,16 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/admin/shops/1/approve",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "admin", "shops", "1", "approve"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"shops",
+								"1",
+								"approve"
+							]
 						},
 						"description": "Shop'u onaylar (status: confirmed) - sadece admin"
 					}
@@ -1704,8 +2184,16 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/admin/shops/1/reject",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "admin", "shops", "1", "reject"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"shops",
+								"1",
+								"reject"
+							]
 						},
 						"description": "Shop'u reddeder (status: rejected) - sadece admin"
 					}
@@ -1730,8 +2218,14 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/admin/services",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "admin", "services"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"services"
+							]
 						},
 						"description": "Yeni servis oluşturur (sadece admin). services tablosuna sadece name ile kayıt ekler"
 					}
@@ -1756,8 +2250,15 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/admin/services/1",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "admin", "services", "1"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"services",
+								"1"
+							]
 						},
 						"description": "Servis adını günceller (sadece admin)"
 					}
@@ -1774,8 +2275,15 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/admin/services/1",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "admin", "services", "1"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"services",
+								"1"
+							]
 						},
 						"description": "Servisi siler (sadece admin)"
 					}
@@ -1812,8 +2320,15 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/photos/barber/1",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "photos", "barber", "1"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"photos",
+								"barber",
+								"1"
+							]
 						},
 						"description": "Barber profili için fotoğraf yükler. Sadece barber'ın kendisi kendi profili için fotoğraf yükleyebilir."
 					}
@@ -1845,8 +2360,15 @@
 						},
 						"url": {
 							"raw": "{{baseUrl}}/api/photos/shop/1",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "photos", "shop", "1"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"photos",
+								"shop",
+								"1"
+							]
 						},
 						"description": "Shop için fotoğraf yükler. Sadece shop owner'ları fotoğraf yükleyebilir."
 					}
@@ -1863,8 +2385,15 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/photos/barber/1",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "photos", "barber", "1"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"photos",
+								"barber",
+								"1"
+							]
 						},
 						"description": "Barber'ın tüm fotoğraflarını listeler"
 					}
@@ -1881,8 +2410,15 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/photos/shop/1",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "photos", "shop", "1"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"photos",
+								"shop",
+								"1"
+							]
 						},
 						"description": "Shop'un tüm fotoğraflarını listeler"
 					}
@@ -1899,8 +2435,14 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/photo/1",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "photo", "1"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"photo",
+								"1"
+							]
 						},
 						"description": "Tek bir fotoğrafın detayını getirir"
 					}
@@ -1917,8 +2459,14 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/photo/1",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "photo", "1"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"photo",
+								"1"
+							]
 						},
 						"description": "Fotoğrafı siler. Barber'lar sadece kendi profilindeki, shop owner'ları sadece kendi shop'undaki fotoğrafları silebilir."
 					}
@@ -1940,8 +2488,15 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/photo/1/like",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "photo", "1", "like"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"photo",
+								"1",
+								"like"
+							]
 						},
 						"description": "Fotoğrafı beğenir"
 					}
@@ -1958,8 +2513,15 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/photo/1/like",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "photo", "1", "like"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"photo",
+								"1",
+								"like"
+							]
 						},
 						"description": "Fotoğraf beğenisini kaldırır"
 					}
@@ -1976,8 +2538,15 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/photo/1/likes",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "photo", "1", "likes"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"photo",
+								"1",
+								"likes"
+							]
 						},
 						"description": "Fotoğrafın tüm beğenilerini listeler"
 					}
@@ -1994,8 +2563,16 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/photo/1/likes/count",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "photo", "1", "likes", "count"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"photo",
+								"1",
+								"likes",
+								"count"
+							]
 						},
 						"description": "Fotoğrafın beğeni sayısını getirir"
 					}
@@ -2012,8 +2589,15 @@
 						],
 						"url": {
 							"raw": "{{baseUrl}}/api/photo/1/liked",
-							"host": ["{{baseUrl}}"],
-							"path": ["api", "photo", "1", "liked"]
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"photo",
+								"1",
+								"liked"
+							]
 						},
 						"description": "Kullanıcının bu fotoğrafı beğenip beğenmediğini kontrol eder"
 					}
@@ -2034,4 +2618,3 @@
 		}
 	]
 }
-
